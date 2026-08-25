@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.ipynb filter=nbstripout
+*.ipynb diff=ipynb
+*.png binary
+*.parquet binary

@@ -1,0 +1,33 @@
+# data — never committed, always fetched
+data/**
+# the next line re-includes directories so git descends into them;
+# without it the .gitkeep negation below can never match
+!data/**/
+!data/**/.gitkeep
+
+# environments
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# secrets
+.env
+*.key
+kaggle.json
+
+# tracking + build artefacts
+mlruns/
+mlartifacts/
+reports/executed/
+reports/_site/
+.ruff_cache/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+
+# personal / machine-local
+CLAUDE.local.md
+.claude/settings.local.json
+.vscode/settings.json
