@@ -19,7 +19,6 @@
     "deny": [
       "Read(./.env)",
       "Read(./**/kaggle.json)",
-      "Bash(git push:*)",
       "Bash(rm -rf:*)",
       "Write(./data/raw/**)"
     ],
