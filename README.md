@@ -3,7 +3,7 @@
 A controlled demonstration that the standard offline evaluation of churn models
 overstates their real performance, and a worked protocol for doing it properly.
 
-> **Status:** the notebook sequence is complete — the headline gap (`04`)
+> **Status:** the notebook sequence is complete: the headline gap (`04`)
 > on Online Retail II, calibration (`05`), the hazard framing (`06`), and
 > the KKBox replication plus the portable checklist (`07`). Every number
 > below is copied from a `reports/results_*.json` file that a notebook in
@@ -12,8 +12,8 @@ overstates their real performance, and a worked protocol for doing it properly.
 ## The claim
 
 Take a churn dataset with real event timestamps. Build a model the way most
-tutorials do — random train/test split, features computed over the full
-history. Report the AUC. Then rebuild the same model with a temporal split, an
+tutorials do: random train/test split, features computed over the full
+history. Report AUC. Then rebuild the same model with a temporal split, an
 explicit gap between the feature as-of date and the label window, and a
 rolling-origin backtest.
 
@@ -28,7 +28,7 @@ a measurement of how much the first number was lying.
 
 The gap between the first row and the last is 0.138 ROC AUC — the size of
 the lie. PR AUC falls by a comparable 0.149 and Brier gets 56% worse in
-relative terms, so this isn't a ranking-metric artefact.
+relative terms, so this isn't a ranking-metric artifact.
 
 Most of that gap closes as soon as the features and the split are fixed.
 Adding the operational gap back in costs nothing further here — but that
@@ -37,14 +37,14 @@ the label window's boundary and never the feature cutoff, so it could not
 have detected a gap effect on feature leakage even if one existed (see
 `notebooks/04_the_gap.py`).
 
-The sharper finding is that `01`'s reported number isn't just inflated — it
+An interesting finding is that `01`'s reported number isn't just inflated, it
 isn't servable. Its features are measured to the dataset's own end date
 regardless of scoring date, so at scoring time they encode information that
 doesn't exist yet. Fed the features an actual deployment would have, the
 same trained model isn't obviously better than the correctly-trained one
 (see `04`'s A/B/C comparison and
 [ADR-0010](docs/adr/0010-holdout-comparison-common-origin.md)). A random
-split doesn't just report an inflated average — it reports a number for a
+split doesn't just report an inflated average, it reports a number for a
 model that has no honest feature set to be served with.
 
 ## Does it replicate?
@@ -64,12 +64,12 @@ different eligibility rule, feature set and label (`notebooks/07_generalisation.
 The gap is real but far smaller: 0.027 against Online Retail II's 0.138.
 The reason is measured rather than assumed. KKBox's corrected model already
 scores 0.907, close to what a metric bounded at 1.0 allows, because
-`days_until_expiry` is nearly a structural readout of the label — so there
+`days_until_expiry` is nearly a structural readout of the label so there
 is little headroom for a leaky version of the same features to inflate
 into. **The size of the lie scales with how little genuine signal the
 honest model has, not with the kind of churn.**
 
-Two things did not transfer, and saying so is part of the result.
+Two things did not transfer.
 Calibration on KKBox is won by the *uncalibrated* model, the opposite of
 `05`'s several-fold improvement on retail. And the gap ablation itself
 doesn't port: on contractual data, changing the gap changes which customers
@@ -81,7 +81,7 @@ across both datasets.
 
 A model selected on an inflated offline metric is selected on the wrong
 criterion. Worse, a *ranking* metric says nothing about whether the predicted
-probabilities are usable for a retention decision — so this repo also covers
+probabilities are usable for a retention decision, so this repo also covers
 calibration and the expected-value threshold that follows from it.
 
 ## Datasets
@@ -123,4 +123,4 @@ uv run churnval fetch retail
 ## Licence
 
 MIT for the code. The datasets are covered by their own terms and are **not**
-redistributed here — the fetch script downloads them from source.
+redistributed here. The fetch script downloads them from source.
