@@ -27,7 +27,7 @@ which customers are eligible to be scored at a given origin at all.
 
 Online Retail II is characterized in [ADR-0003](0003-dataset-selection.md)
 as non-contractual churn with a largely wholesale-cadence, UK-based
-customer base — purchases are lumpy and irregular, not a monthly-cadence
+customer base, purchases are lumpy and irregular, not a monthly-cadence
 consumer subscription. The project-wide defaults in `config.py`
 (`DEFAULT_HORIZON_DAYS = 30`, `DEFAULT_GAP_DAYS = 7`) are explicitly
 documented there as "defaults, not constraints: notebooks that vary them do
