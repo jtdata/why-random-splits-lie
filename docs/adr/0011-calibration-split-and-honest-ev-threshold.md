@@ -20,7 +20,7 @@ classifier a reasonable amount of training data at all, leaving exactly one
 origin-pair to spare for "fit the calibrator" and "evaluate it" as two
 *separate* later origins.
 
-**The EV threshold — the defect.** The first version of the
+**The EV threshold, the defect.** The first version of the
 expected-value section swept a grid of threshold values
 (`churnval.evaluation.sweep_expected_value`) over each probability variant
 (uncalibrated, Platt, isotonic), picked each variant's threshold by
@@ -70,8 +70,8 @@ part of this project's argument.
 
 ## Consequences
 
-**Good:** the reported EV comparison is now unbiased and threshold-agnostic
-— it doesn't depend on which of 19 grid points happened to look best on the
+**Good:** the reported EV comparison is now unbiased and threshold-agnostic.
+It doesn't depend on which of 19 grid points happened to look best on the
 evaluation slice, and it directly tests the property that actually matters
 for a probability threshold rule: whether `p` means what it claims to mean.
 The result reverses cleanly and is arguably a *better* demonstration of why
