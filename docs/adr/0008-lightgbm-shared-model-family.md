@@ -9,7 +9,7 @@
 `01_naive_baseline` fits the naive panel with `LGBMClassifier(random_state=
 SEED, verbosity=-1)` on three RFM features (`recency_days`, `frequency`,
 `monetary`). This project's headline result, produced in `04_the_gap`
-(per `docs/timeline.md`: "How big is the lie?"), is a single number — the
+(per `docs/timeline.md`: "How big is the lie?"), is a single number, the
 difference between the random-split (wrong) result from `01` and the
 temporal-split (correct) result `03_temporal_protocol` will produce. If `01`
 used one model family and `03`/`04` used a different one, the measured gap
