@@ -9,8 +9,8 @@
 `01_naive_baseline`'s first implementation defined the naive churn label as
 "no purchase in the final `N` days of the whole dataset," anchored to
 `transactions["invoice_date"].max()`. `naive_features`'s `recency_days` uses
-the same reference date. The two are therefore not merely correlated —
-`churned == (recency_days > N)` is a mathematical identity — and the naive
+the same reference date. The two are therefore not merely correlated
+(`churned == (recency_days > N)` is a mathematical identity) and the naive
 model scored a literal ROC AUC of 1.0, not just an inflated one. That is a
 different failure mode than the "inflated but plausible" number the project
 argument needs, so the label was rebuilt to be forward-looking, using
@@ -31,7 +31,7 @@ customer base — purchases are lumpy and irregular, not a monthly-cadence
 consumer subscription. The project-wide defaults in `config.py`
 (`DEFAULT_HORIZON_DAYS = 30`, `DEFAULT_GAP_DAYS = 7`) are explicitly
 documented there as "defaults, not constraints: notebooks that vary them do
-so explicitly and say why" — they remain what later notebooks use for KKBox,
+so explicitly and say why", they remain what later notebooks use for KKBox,
 which is a monthly-billing subscription product where a 30-day horizon is
 the natural unit.
 
@@ -54,14 +54,14 @@ For the Online Retail II naive panel only, in `churnval.naive_baseline`:
 
 | Option | Why it was plausible | Why it was rejected |
 |---|---|---|
-| Keep `HORIZON_DAYS = 30` (the project-wide default) | Consistency with `config.py`; one fewer constant to explain | `config.py` itself says defaults are meant to be varied with a stated reason, and this dataset's purchase cadence is exactly that reason — a 30-day window would mislabel most active wholesale-style customers as churned |
+| Keep `HORIZON_DAYS = 30` (the project-wide default) | Consistency with `config.py`; one fewer constant to explain | `config.py` itself says defaults are meant to be varied with a stated reason, and this dataset's purchase cadence is exactly that reason: a 30-day window would mislabel most active wholesale-style customers as churned |
 | Eligibility requires >=2 purchases in the lookback window, not >=1 | More strongly indicates an established repeat-purchase relationship; screens out true one-time buyers who were never really "at risk" of churning in a repeat-purchase sense | Shrinks the eligible population and excludes legitimate first-time-repeat candidates from ever being scored; keeping the naive baseline's population close to the full customer base was preferred for this notebook. Revisit when `03_temporal_protocol` or `06_hazard_framing` needs a more established cohort |
 
 ## Consequences
 
 **Good:** the naive label is no longer a mathematical identity with the
 recency feature, so `01_naive_baseline`'s inflated result is a genuine
-(if still wrong) offline estimate rather than a tautology — the three
+(if still wrong) offline estimate rather than a tautology. The three
 intended mistakes (full-history features, row-level random split, no gap)
 are now what the notebook's ablation and diagnosis in `02_leakage_diagnosis`
 have to explain. The eligibility rule gives every origin a real, checkable
@@ -72,7 +72,7 @@ specific constants that live in `naive_baseline.py` rather than `config.py`,
 so a reader has to know to look there rather than in the one place the
 project usually documents window constants. The `>=1`-purchase eligibility
 rule is permissive enough that a customer who bought exactly once, 364 days
-before an origin, is scored — a weak basis for a recency/frequency feature.
+before an origin, is scored, a weak basis for a recency/frequency feature.
 
 **Revisit if:** `03_temporal_protocol` or `06_hazard_framing` need a cohort
 with an established purchase pattern (in which case switch eligibility to
