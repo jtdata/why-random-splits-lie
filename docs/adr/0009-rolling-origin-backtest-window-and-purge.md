@@ -6,7 +6,7 @@
 
 ## Context
 
-`03_temporal_protocol` builds the corrected validation protocol —
+`03_temporal_protocol` builds the corrected validation protocol:
 as-of-safe features, a real gap, and a walk-forward backtest across
 origins, retraining at each one, per `docs/standards/validation.md`'s
 requirement for "several origins, retraining forward at each." Two related
@@ -26,7 +26,7 @@ label window had closed by the time of the test origin's `as_of`. With
 its own origin — more than three of this dataset's 30-day origin steps
 (`3 × 30 = 90 < 97 ≤ 4 × 30 = 120`). That means the three most recent
 origins before *any* test origin still had open, unresolved label windows
-at that simulated point in time, every time — training on them uses real,
+at that simulated point in time, every time. Training on them uses real,
 correctly-computed labels that would not actually have been knowable yet
 in a live deployment. This was verified directly (`origins[j].label_end`
 against `origins[i].as_of` for every origin pair, not assumed) and
@@ -51,7 +51,7 @@ number baked into the code.
 | Option | Why it was plausible | Why it was rejected |
 |---|---|---|
 | Fixed/rolling lookback window (train only on the most recent `K` origins) | Better simulates "only recent behaviour matters," if that were true, and is cheaper to retrain | No evidence in this dataset that purchase patterns go stale within the ~8-month backtest span, and it would shrink an already-small set of origins further |
-| No maturity check (the original, buggy implementation) | Simpler; more origins usable as both training and test | Trains on labels that would not have been knowable yet at the simulated `as_of` — a real leak, not a simplification, in the one notebook whose entire purpose is being the correct baseline |
+| No maturity check (the original, buggy implementation) | Simpler; more origins usable as both training and test | Trains on labels that would not have been knowable yet at the simulated `as_of`, a real leak, not a simplification, in the one notebook whose entire purpose is being the correct baseline |
 
 ## Consequences
 
@@ -62,7 +62,7 @@ dataset happens to already know. The purge mechanism (`label_end` vs.
 hardcoding "skip 3."
 
 **Bad:** the notebook loses one tested origin (six instead of seven), and
-the first tested origin trains on only one prior origin's worth of data —
+the first tested origin trains on only one prior origin's worth of data,
 the least mature, most data-starved point in the backtest, visible in the
 per-origin chart as the softest ROC AUC.
 
