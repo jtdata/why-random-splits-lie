@@ -1,6 +1,6 @@
 # Coding standards
 
-These apply to every project in the portfolio. They are deliberately short —
+These apply to every project in the portfolio. They are deliberately short,
 a standard nobody reads is decoration.
 
 ## Environment
@@ -15,7 +15,7 @@ a standard nobody reads is decoration.
 
 - All importable code under `src/<package>/`. The package is installed into the
   environment in editable mode, so notebooks and tests import it the same way a
-  user would — no `sys.path` manipulation anywhere.
+  user would, no `sys.path` manipulation anywhere.
 - Modules are small and named for what they do: `io.py`, `features.py`,
   `splits.py`, `evaluation.py`, `calibration.py`.
 - One config module (`config.py`) owns every path and constant. Nothing else
@@ -31,7 +31,7 @@ a standard nobody reads is decoration.
   exists*, not what each line does. Where a function implements a method with a
   source, cite it.
 - Names describe the thing, not its type. `features_asof` not `df2`.
-- No mutable default arguments, no bare `except`, no `print` in `src/` — use
+- No mutable default arguments, no bare `except`, no `print` in `src/`, use
   `logging`.
 
 ## Data handling
