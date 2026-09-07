@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The portable checklist | Why random splits lie about churn</title>
+
+<style>
+:root { --side: 280px; --ink: #141D26; --muted: #5A6472; --rule: #E3E7EC;
+        --accent: #1F6FEB; --bg: #FFFFFF; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); }
+#site-nav {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--side);
+  overflow-y: auto; border-right: 1px solid var(--rule); padding: 22px 18px;
+  box-sizing: border-box; font: 14px/1.5 -apple-system, BlinkMacSystemFont,
+  "Segoe UI", Helvetica, Arial, sans-serif; background: #FBFCFD;
+}
+#site-nav .brand { font-weight: 700; color: var(--ink); text-decoration: none;
+  display: block; font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
+#site-nav .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 18px; }
+#site-nav ol { list-style: none; padding: 0; margin: 0 0 18px 0; counter-reset: n; }
+#site-nav li { margin: 0 0 2px 0; }
+#site-nav a.item { display: block; padding: 6px 9px; border-radius: 5px;
+  color: var(--ink); text-decoration: none; }
+#site-nav a.item:hover { background: #EEF2F7; }
+#site-nav a.item.active { background: var(--accent); color: #fff; font-weight: 600; }
+#site-nav .num { color: var(--muted); font-variant-numeric: tabular-nums;
+  margin-right: 8px; font-size: 12.5px; }
+#site-nav a.item.active .num { color: #D7E6FF; }
+#site-nav .grouplabel { text-transform: uppercase; letter-spacing: .07em;
+  font-size: 11px; color: var(--muted); margin: 16px 0 7px 9px; font-weight: 600; }
+#site-nav .repo { border-top: 1px solid var(--rule); padding-top: 14px;
+  font-size: 12.5px; }
+#site-nav .repo a { color: var(--accent); text-decoration: none; }
+#site-main { margin-left: var(--side); }
+#site-main .jp-Notebook, #site-main .md-page { max-width: 900px; margin: 0 auto;
+  padding: 34px 40px 10px 40px; }
+#pager { max-width: 900px; margin: 0 auto; padding: 26px 40px 70px 40px;
+  display: flex; justify-content: space-between; gap: 18px;
+  border-top: 1px solid var(--rule);
+  font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+#pager a { color: var(--accent); text-decoration: none; max-width: 46%; }
+#pager .lbl { display: block; color: var(--muted); font-size: 12px; }
+/* Soften the In[ ]/Out[ ] gutter so prose leads and code supports. */
+.jp-InputPrompt, .jp-OutputPrompt { opacity: .34; font-size: 11px; }
+.jp-RenderedMarkdown { font-size: 15.5px; line-height: 1.62; color: var(--ink); }
+.jp-RenderedMarkdown h1 { font-size: 30px; margin: 6px 0 14px; line-height: 1.2; }
+.jp-RenderedMarkdown h2 { font-size: 21px; margin-top: 34px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
+.jp-RenderedMarkdown h3 { font-size: 17px; margin-top: 26px; }
+.jp-RenderedMarkdown table { font-size: 13px; }
+.jp-RenderedMarkdown blockquote { border-left: 3px solid var(--accent);
+  background: #F5F8FD; margin-left: 0; padding: 10px 16px; }
+.md-page { font: 15.5px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI",
+  Helvetica, Arial, sans-serif; color: var(--ink); }
+.md-page h1 { font-size: 31px; line-height: 1.2; }
+.md-page h2 { font-size: 21px; margin-top: 34px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
+.md-page table { border-collapse: collapse; font-size: 14px; margin: 16px 0; }
+.md-page th, .md-page td { border: 1px solid var(--rule); padding: 6px 11px;
+  text-align: left; vertical-align: top; }
+.md-page th { background: #F4F7FA; }
+.md-page code { background: #F2F4F7; padding: 1px 5px; border-radius: 3px;
+  font-size: 13.5px; }
+.md-page pre { background: #F7F9FB; border: 1px solid var(--rule);
+  padding: 13px 15px; border-radius: 6px; overflow-x: auto; }
+.md-page pre code { background: none; padding: 0; }
+.md-page blockquote { border-left: 3px solid var(--accent); background: #F5F8FD;
+  margin-left: 0; padding: 10px 16px; }
+.md-page img { max-width: 100%; }
+@media (max-width: 950px) {
+  #site-nav { position: static; width: auto; height: auto; border-right: none;
+              border-bottom: 1px solid var(--rule); }
+  #site-main { margin-left: 0; }
+  #site-main .jp-Notebook, #site-main .md-page, #pager { padding: 22px 18px; }
+}
+</style>
+</head>
+<body>
+<nav id="site-nav">
+  <a class="brand" href="index.html">Why random splits lie about churn</a>
+  <div class="sub">A worked temporal-validation protocol, with every number
+  computed by the notebook it appears in.</div>
+  <ol><li><a class="item" href="index.html">Overview</a></li></ol>
+  <div class="grouplabel">The argument, in order</div>
+  <ol><li><a class="item" href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li>
+<li><a class="item" href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li>
+<li><a class="item" href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li>
+<li><a class="item" href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li>
+<li><a class="item" href="04_the_gap.html"><span class="num">04</span>The gap</a></li>
+<li><a class="item" href="05_calibration.html"><span class="num">05</span>Calibration</a></li>
+<li><a class="item" href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li>
+<li><a class="item" href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol>
+  <div class="grouplabel">Takeaway</div>
+  <ol><li><a class="item active" href="checklist.html">The portable checklist</a></li></ol>
+  <div class="repo"><a href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a></div>
+</nav>
+<div id="site-main">
+<div class="md-page"><h1>A portable checklist for validating a churn model</h1>
+<p>This distills what <code>notebooks/00</code>-<code>07</code> found, built twice, once on
+non-contractual retail churn (Online Retail II), once on contractual
+subscription churn (KKBox, ~25x the row count), into something you can use
+on a churn dataset this repo has never seen. Each item names the failure it
+catches and, where it matters, what changes between a small dataset and a
+large one. It assumes nothing about this repo except what's stated inline.</p>
+<h2>1. Define the event before you define the label</h2>
+<p>Write down, in one sentence: is churn something that <em>happens</em> (a
+subscription lapses, a cancellation is recorded) or something you have to
+<em>infer</em> from an absence (no purchase in N days)? These are different
+problems wearing the same name.</p>
+<ul>
+<li><strong>Observed-event churn</strong> (contractual: subscriptions, memberships): you
+have an explicit date the relationship ends or is due to renew. Your
+label can be built directly from that date plus a horizon.</li>
+<li><strong>Inferred churn</strong> (non-contractual: retail, usage-based products): there
+is no event to point to. &quot;Churned&quot; is a modeling choice (how many days of
+silence counts?), and that choice needs its own justification, not just a
+round number.</li>
+</ul>
+<p>If you can't say which one your problem is, you can't design the next four
+steps correctly. This determines your eligibility rule, your label, and
+whether a hazard model is answering a genuinely different question or a
+redundant one.</p>
+<h2>2. Draw the timeline before writing code</h2>
+<p>Four points, always in this order: <strong>feature as-of date</strong> → <strong>gap</strong> →
+<strong>label window start</strong> → <strong>label window end</strong>. If you can't draw this for
+your problem, the problem isn't defined yet, go back to step 1.</p>
+<ul>
+<li>The <strong>gap</strong> is your real operational lead time: how long between scoring
+a customer and being able to act on it (write an email, place a call,
+ship an offer). Zero gap means your features and your label window touch,
+and a feature computed at the instant of the event can encode the event.</li>
+<li><strong>On contractual data, check what the gap does to your label, not just to
+your feature cutoff.</strong> If eligibility means &quot;due for a renewal decision
+around now,&quot; then customers who renew <em>during</em> the gap have their next
+decision pushed toward the far edge of the label window, and whether they
+land inside it is driven by plan length rather than by any intent to
+leave. This project measured a large share of one panel affected that way
+(<code>07</code>). It is not a leak and not necessarily the wrong choice, but it
+means changing the gap changes <em>who counts as a churner</em>, so a
+&quot;gap vs. no gap&quot; ablation on such a dataset is not measuring only the
+gap. Measure the prevalence of both arms before comparing their scores.</li>
+<li>The <strong>label window</strong> length is a real modeling choice with a real
+alternative, not a default. State why this window, not another, and
+what would make you reconsider it (<code>ADR-0007</code>/<code>ADR-0013</code> in this repo are
+worked examples, one dataset needed a value 3x the project's own
+default, one needed no override at all, and knowing <em>why</em> is the point,
+not the specific numbers).</li>
+</ul>
+<h2>3. Make eligibility a real rule, checked at real scale</h2>
+<p>&quot;Which entities get scored at this origin&quot; is not a formality, get it
+wrong and you either waste computation scoring people who were never
+candidates, or silently exclude the people the label is actually about.</p>
+<ul>
+<li><strong>Non-contractual:</strong> typically activity-based, some recent signal of
+engagement (a purchase, a login) in a lookback window.</li>
+<li><strong>Contractual:</strong> typically state-based, whose current membership/contract
+is due for a decision <em>around this origin</em>, not &quot;has ever transacted.&quot;
+An activity-based rule ported directly to a contractual dataset can
+silently score a population 5-10x larger than the real one, most of whom
+aren't due for a decision for months (measured directly in this repo:
+1.05M-1.74M customers under an activity rule vs. 200K-424K under an
+expiry-based one, same dataset, same origins).</li>
+<li>Whichever rule you pick, <strong>measure the population size it produces</strong>
+against the real data before committing to it. A rule that looks
+reasonable on paper can be wildly wrong in practice, and the only way to
+know is to run it.</li>
+</ul>
+<h2>4. Snapshot features strictly before the as-of date, mechanically, not just conceptually</h2>
+<p>For every feature, ask: at the as-of instant, would this value actually
+have been populated? Then check it, don't just reason about it:</p>
+<ul>
+<li><strong>Reference-date check.</strong> For any &quot;days since X&quot; or &quot;days until Y&quot;
+feature, extract the reference date the feature is measured <em>to</em>, per
+row, and assert it is <code>&lt;= as_of</code>. A feature whose reference date is
+frozen to a dataset's global end date (or any other fixed anchor reused
+across rows with different as-of dates) partially or wholly encodes the
+label window's own outcome. This repo found and demonstrated exactly
+this bug (<code>06</code>'s naive-baseline audit, and the leakage-audit skill this
+project uses now runs this check by default).</li>
+<li><strong>Aggregation window check.</strong> Any count, sum, or &quot;most recent&quot; feature
+needs its own window boundary stated and enforced, not &quot;all history,&quot;
+unless that's a deliberate, disclosed choice.</li>
+<li>At scale, this check needs to be a query, not a manual read-through, a
+vectorized SQL pass across every origin at once with an explicit
+<code>&lt; as_of</code> boundary in the join condition, checked once as a unit test
+against a small hand-built fixture, not eyeballed against millions of
+rows.</li>
+</ul>
+<h2>5. Use a rolling-origin backtest, with a real purge, not a single split</h2>
+<p>One split is one draw from a distribution and tells you nothing about
+variance across regimes. A rolling-origin backtest (several origins,
+retraining forward at each) does, but only if training data is <em>actually</em>
+knowable at each origin:</p>
+<ul>
+<li>A training origin's label isn't settled until its own label window has
+fully closed. Pooling every earlier origin regardless of whether its
+label had matured yet is a leak this project found live, mid-build, in
+its own &quot;correct&quot; notebook (<code>ADR-0009</code>), it is not a hypothetical.</li>
+<li>The purge window is a direct, computable consequence of <code>gap + horizon</code>
+vs. the spacing between origins, not a number to guess: work out how
+many origins get excluded before writing the backtest loop, and check
+the real code excludes exactly that many.</li>
+<li><strong>At small scale</strong>, a Python loop over origins, each doing a pandas
+filter+groupby, is fine (this project's first dataset: ~800K rows, ~10
+origins, seconds per pass).</li>
+<li><strong>At large scale</strong>, that same loop does not scale linearly, it scales
+with <code>origins x rows</code>, and an inequality join across the same axes can
+blow up in ways a bounded time window doesn't obviously fix (measured
+directly: an inequality join with a 500-day bound did not finish in
+several minutes against 21.5M rows; the purpose-built &quot;nearest prior row
+per entity&quot; operation most SQL engines provide finished the same
+computation in under a minute). If your backtest is taking longer than
+you can iterate on, that's a real signal to change the <em>algorithm</em>, not
+just add compute.</li>
+</ul>
+<h2>6. Report a ranking metric and a calibration metric together, always</h2>
+<p>ROC AUC (or PR AUC) alone answers &quot;does this model separate the classes.&quot;
+It says nothing about whether the predicted probability of 0.7 means
+anything like a 70% chance. Two models can rank identically and be
+calibrated completely differently, or vice versa.</p>
+<ul>
+<li>Fit any calibrator (Platt, isotonic) on a slice <strong>strictly later</strong> than
+the classifier's own training data, never on training folds. This
+project's own three-way split (train / calibrate / evaluate, each a
+distinct later slice) is the minimal structure that avoids the
+calibrator memorizing the classifier's overconfidence rather than
+correcting it.</li>
+<li>Report the <em>decomposed</em> calibration metric (reliability, resolution,
+uncertainty), not just an aggregate Brier score. Two models can land at
+the same Brier score for genuinely different reasons (opposite-direction
+miscalibration of similar magnitude looks identical to &quot;both well
+calibrated&quot; if you only look at the aggregate number).</li>
+</ul>
+<h2>7. If a decision follows from the prediction, price the decision honestly</h2>
+<p>A ranking or calibration metric doesn't say what to <em>do</em>. If there's a
+threshold-based action downstream (contact this customer, don't contact
+that one), that threshold needs its own honest derivation:</p>
+<ul>
+<li><strong>Derive the threshold from the stated costs, before looking at
+outcomes</strong>, <code>offer_cost / (save_rate * saved_margin)</code>, the standard
+break-even rule, never by sweeping a grid of thresholds against the
+evaluation outcomes and reporting whichever one wins. This project built
+exactly that mistake once, reported a headline number from it, and only
+caught it under adversarial review: the biased version said the wrong
+model made the better business decision, and the honest version said the
+opposite (<code>ADR-0011</code>). If a review process is going to catch this, catch
+it before the number goes in a report, not after.</li>
+<li>State the cost assumptions plainly, including which ones are invented
+for illustration versus grounded in real data. Nobody actually measures
+the &quot;does the intervention work&quot; number (<code>save_rate</code>), say so, don't
+hide the assumption inside a clean-looking number.</li>
+</ul>
+<h2>8. If &quot;when&quot; matters as well as &quot;whether,&quot; build a hazard model, and check what it's actually for</h2>
+<p>A binary &quot;churned within N days&quot; label has a specific, nameable blind
+spot: a customer who returns on day N+5 is filed identically to one who
+never returns. A discrete-time hazard model (person-period expansion, a
+hazard estimate per period, aggregated to a survival probability) doesn't
+remove the window, but it can expose that blind spot directly, and it
+answers a question the binary label structurally cannot (&quot;where within the
+window is risk concentrated&quot;).</p>
+<ul>
+<li>Don't expect better aggregate ranking/calibration numbers from switching
+to a hazard framing, reshaping the same underlying event into
+person-periods doesn't hand the model new information. The value is in
+what the binary label can't say at all, not in beating it on its own
+terms.</li>
+<li><strong>The period width is not portable across datasets or horizons.</strong> A
+period count tuned for one horizon can silently collapse to a single
+period (i.e., no hazard resolution at all) on a shorter horizon,
+rederive it, don't reuse an absolute day count.</li>
+<li><strong>The hazard model's notion of &quot;event&quot; has to match the binary label's
+notion of &quot;success,&quot; explicitly.</strong> If your event log contains rows that
+represent a negative outcome dressed as an event (a cancellation
+transaction, a downgrade, a support ticket that precedes a churn), a
+hazard model built on &quot;any row in the log&quot; will silently disagree with a
+binary label that specifically excludes those rows, this project caught
+exactly this mismatch while building its second dataset (a cancellation
+transaction would have counted as &quot;the customer returned,&quot; the opposite
+of what the label meant), and it would not have surfaced on the first
+dataset, where that category of row was already dropped in cleaning for
+an unrelated reason. Check this explicitly; don't assume a working
+binary label implies a working hazard label built from the same events.</li>
+</ul>
+<h2>9. Retrospective diagnostics need enough future data to be honest about their own limits</h2>
+<p>A &quot;how many customers labeled churned actually come back later&quot; check
+needs transaction history well past the window you're diagnosing, and the
+amount of history available shrinks for your most recent, often most
+policy-relevant, origins. State the observation window's own length
+alongside the number it produced (this project's version: &quot;at least X%
+return within the observable N-day tail,&quot; not &quot;X% return,&quot; because the
+true number is right-censored by how much history exists past that
+origin).</p>
+<h2>10. Before scaling to a new dataset, separate what's genuinely reusable from what only looks reusable</h2>
+<p>Not everything in a working pipeline transfers to a new dataset, and not
+everything needs to be rebuilt from scratch either. Check each function
+individually against three questions, not one blanket policy:</p>
+<ul>
+<li><strong>Does it only touch generic column names</strong> (an entity ID, a score date, a
+label, caller-supplied feature names) <strong>or does it hardcode a
+dataset-specific one?</strong> The former is free to reuse; the latter needs a
+parameter added (if it's a single hardcoded name in an otherwise-generic
+function) or a fresh implementation (if the <em>logic</em>, not just a name,
+differs, a different eligibility criterion, a different feature set).</li>
+<li><strong>Confirm genericity empirically, not by inspection alone</strong> if your
+test suite already exercises the &quot;generic&quot; functions with a
+deliberately non-domain-specific fixture column name, that's stronger
+evidence than reading the function and assuming.</li>
+<li><strong>When you do touch a shared, already-audited function</strong>, grep for every
+call site first, make the smallest change that generalizes it, and
+re-run whatever already depended on it, a full re-execution with a
+before/after diff of every numeric output, not just &quot;the tests still
+pass.&quot; This project did exactly that for one function shared across two
+datasets and confirmed, not assumed, zero behavioral change to the
+already-published result that depended on it.</li>
+</ul>
+<h2>11. The gap between &quot;the wrong way&quot; and &quot;the honest number&quot; is not always where you expect it</h2>
+<p>On the non-contractual dataset, the <em>features and the split</em> carried
+almost all of the inflation and the operational gap contributed nothing
+measurable on top. That result is narrower than it sounds, and the
+narrowing is the lesson. This project's <code>gap_days</code> moves the label
+window's boundary, never the feature cutoff, so that ablation could not
+have detected a gap effect on feature leakage even if one existed.</p>
+<p>The same ablation does <strong>not</strong> transfer to the contractual dataset, for
+the reason step 2 gives: there, changing the gap changes which customers
+count as churners, so the two arms score differently-labelled panels and
+the comparison answers a different question. This project ran it on both
+datasets and can only report the decomposition for one.</p>
+<p>Two things to take from that. Decompose your own pipeline piece by piece
+rather than assuming which piece does the damage, and before comparing
+two ablation arms, check they are still scoring the same problem. Report
+the honest number even when, especially when, it complicates the headline
+you expected to write.</p>
+</div>
+<div id="pager"><a href="07_generalisation.html"><span class="lbl">Previous</span>Generalisation</a><span></span></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why random splits lie about churn</title>
+
+<style>
+:root { --side: 280px; --ink: #141D26; --muted: #5A6472; --rule: #E3E7EC;
+        --accent: #1F6FEB; --bg: #FFFFFF; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); }
+#site-nav {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--side);
+  overflow-y: auto; border-right: 1px solid var(--rule); padding: 22px 18px;
+  box-sizing: border-box; font: 14px/1.5 -apple-system, BlinkMacSystemFont,
+  "Segoe UI", Helvetica, Arial, sans-serif; background: #FBFCFD;
+}
+#site-nav .brand { font-weight: 700; color: var(--ink); text-decoration: none;
+  display: block; font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
+#site-nav .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 18px; }
+#site-nav ol { list-style: none; padding: 0; margin: 0 0 18px 0; counter-reset: n; }
+#site-nav li { margin: 0 0 2px 0; }
+#site-nav a.item { display: block; padding: 6px 9px; border-radius: 5px;
+  color: var(--ink); text-decoration: none; }
+#site-nav a.item:hover { background: #EEF2F7; }
+#site-nav a.item.active { background: var(--accent); color: #fff; font-weight: 600; }
+#site-nav .num { color: var(--muted); font-variant-numeric: tabular-nums;
+  margin-right: 8px; font-size: 12.5px; }
+#site-nav a.item.active .num { color: #D7E6FF; }
+#site-nav .grouplabel { text-transform: uppercase; letter-spacing: .07em;
+  font-size: 11px; color: var(--muted); margin: 16px 0 7px 9px; font-weight: 600; }
+#site-nav .repo { border-top: 1px solid var(--rule); padding-top: 14px;
+  font-size: 12.5px; }
+#site-nav .repo a { color: var(--accent); text-decoration: none; }
+#site-main { margin-left: var(--side); }
+#site-main .jp-Notebook, #site-main .md-page { max-width: 900px; margin: 0 auto;
+  padding: 34px 40px 10px 40px; }
+#pager { max-width: 900px; margin: 0 auto; padding: 26px 40px 70px 40px;
+  display: flex; justify-content: space-between; gap: 18px;
+  border-top: 1px solid var(--rule);
+  font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+#pager a { color: var(--accent); text-decoration: none; max-width: 46%; }
+#pager .lbl { display: block; color: var(--muted); font-size: 12px; }
+/* Soften the In[ ]/Out[ ] gutter so prose leads and code supports. */
+.jp-InputPrompt, .jp-OutputPrompt { opacity: .34; font-size: 11px; }
+.jp-RenderedMarkdown { font-size: 15.5px; line-height: 1.62; color: var(--ink); }
+.jp-RenderedMarkdown h1 { font-size: 30px; margin: 6px 0 14px; line-height: 1.2; }
+.jp-RenderedMarkdown h2 { font-size: 21px; margin-top: 34px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
+.jp-RenderedMarkdown h3 { font-size: 17px; margin-top: 26px; }
+.jp-RenderedMarkdown table { font-size: 13px; }
+.jp-RenderedMarkdown blockquote { border-left: 3px solid var(--accent);
+  background: #F5F8FD; margin-left: 0; padding: 10px 16px; }
+.md-page { font: 15.5px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI",
+  Helvetica, Arial, sans-serif; color: var(--ink); }
+.md-page h1 { font-size: 31px; line-height: 1.2; }
+.md-page h2 { font-size: 21px; margin-top: 34px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
+.md-page table { border-collapse: collapse; font-size: 14px; margin: 16px 0; }
+.md-page th, .md-page td { border: 1px solid var(--rule); padding: 6px 11px;
+  text-align: left; vertical-align: top; }
+.md-page th { background: #F4F7FA; }
+.md-page code { background: #F2F4F7; padding: 1px 5px; border-radius: 3px;
+  font-size: 13.5px; }
+.md-page pre { background: #F7F9FB; border: 1px solid var(--rule);
+  padding: 13px 15px; border-radius: 6px; overflow-x: auto; }
+.md-page pre code { background: none; padding: 0; }
+.md-page blockquote { border-left: 3px solid var(--accent); background: #F5F8FD;
+  margin-left: 0; padding: 10px 16px; }
+.md-page img { max-width: 100%; }
+@media (max-width: 950px) {
+  #site-nav { position: static; width: auto; height: auto; border-right: none;
+              border-bottom: 1px solid var(--rule); }
+  #site-main { margin-left: 0; }
+  #site-main .jp-Notebook, #site-main .md-page, #pager { padding: 22px 18px; }
+}
+</style>
+</head>
+<body>
+<nav id="site-nav">
+  <a class="brand" href="index.html">Why random splits lie about churn</a>
+  <div class="sub">A worked temporal-validation protocol, with every number
+  computed by the notebook it appears in.</div>
+  <ol><li><a class="item active" href="index.html">Overview</a></li></ol>
+  <div class="grouplabel">The argument, in order</div>
+  <ol><li><a class="item" href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li>
+<li><a class="item" href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li>
+<li><a class="item" href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li>
+<li><a class="item" href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li>
+<li><a class="item" href="04_the_gap.html"><span class="num">04</span>The gap</a></li>
+<li><a class="item" href="05_calibration.html"><span class="num">05</span>Calibration</a></li>
+<li><a class="item" href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li>
+<li><a class="item" href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol>
+  <div class="grouplabel">Takeaway</div>
+  <ol><li><a class="item" href="checklist.html">The portable checklist</a></li></ol>
+  <div class="repo"><a href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a></div>
+</nav>
+<div id="site-main">
+<div class="md-page"><h1>Why random splits lie about churn</h1>
+<p>A controlled demonstration that the standard offline evaluation of churn models
+overstates their real performance, and a worked protocol for doing it properly.</p>
+<blockquote>
+<p><strong>Status:</strong> the notebook sequence is complete: the headline gap (<code>04</code>)
+on Online Retail II, calibration (<code>05</code>), the hazard framing (<code>06</code>), and
+the KKBox replication plus the portable checklist (<code>07</code>). Every number
+below is copied from a <code>reports/results_*.json</code> file that a notebook in
+this repo wrote; none is estimated or recalled.</p>
+</blockquote>
+<h2>The claim</h2>
+<p>Take a churn dataset with real event timestamps. Build a model the way most
+tutorials do: random train/test split, features computed over the full
+history. Report AUC. Then rebuild the same model with a temporal split, an
+explicit gap between the feature as-of date and the label window, and a
+rolling-origin backtest.</p>
+<p>The difference between those two numbers is not a modelling improvement. It is
+a measurement of how much the first number was lying.</p>
+<table>
+<thead>
+<tr>
+  <th>Evaluation</th>
+  <th>ROC AUC</th>
+  <th>PR AUC</th>
+  <th>Brier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Random split (the wrong way)</td>
+  <td>0.903</td>
+  <td>0.944</td>
+  <td>0.123</td>
+</tr>
+<tr>
+  <td>Temporal split, no gap</td>
+  <td>0.766</td>
+  <td>0.799</td>
+  <td>0.189</td>
+</tr>
+<tr>
+  <td>Temporal split with gap, rolling origin</td>
+  <td>0.765</td>
+  <td>0.795</td>
+  <td>0.192</td>
+</tr>
+</tbody>
+</table>
+<p>The gap between the first row and the last is 0.138 ROC AUC, the size of
+the lie. PR AUC falls by a comparable 0.149 and Brier gets 56% worse in
+relative terms, so this isn't a ranking-metric artifact.</p>
+<p>Most of that gap closes as soon as the features and the split are fixed.
+Adding the operational gap back in costs nothing further here, but that
+ablation is narrower than it looks, because this project's <code>gap_days</code> moves
+the label window's boundary and never the feature cutoff, so it could not
+have detected a gap effect on feature leakage even if one existed (see
+<code>notebooks/04_the_gap.py</code>).</p>
+<p>An interesting finding is that <code>01</code>'s reported number isn't just inflated, it
+isn't servable. Its features are measured to the dataset's own end date
+regardless of scoring date, so at scoring time they encode information that
+doesn't exist yet. Fed the features an actual deployment would have, the
+same trained model isn't obviously better than the correctly-trained one
+(see <code>04</code>'s A/B/C comparison and
+<a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0010-holdout-comparison-common-origin.md">ADR-0010</a>). A random
+split doesn't just report an inflated average, it reports a number for a
+model that has no honest feature set to be served with.</p>
+<h2>Does it replicate?</h2>
+<p>Yes, on contractual subscription churn at about 25x the row count, with a
+different eligibility rule, feature set and label (<code>notebooks/07_generalisation.py</code>):</p>
+<table>
+<thead>
+<tr>
+  <th>KKBox evaluation</th>
+  <th>ROC AUC</th>
+  <th>PR AUC</th>
+  <th>Brier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Naive (full-history features, random split)</td>
+  <td>0.934</td>
+  <td>0.939</td>
+  <td>0.102</td>
+</tr>
+<tr>
+  <td>Corrected (as-of features, gap, rolling origin)</td>
+  <td>0.907</td>
+  <td>0.909</td>
+  <td>0.123</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>KKBox's figures move by up to ~0.001 between runs on identical inputs,
+while the Online Retail II figures above reproduce exactly. See
+<code>notebooks/07_generalisation.py</code>'s leakage audit, row 11.</p>
+</blockquote>
+<p>The gap is real but far smaller: 0.027 against Online Retail II's 0.138.
+The reason is measured rather than assumed. KKBox's corrected model already
+scores 0.907, close to what a metric bounded at 1.0 allows, because
+<code>days_until_expiry</code> is nearly a structural readout of the label so there
+is little headroom for a leaky version of the same features to inflate
+into. <strong>The size of the lie scales with how little genuine signal the
+honest model has, not with the kind of churn.</strong></p>
+<p>Two things did not transfer.
+Calibration on KKBox is won by the <em>uncalibrated</em> model, the opposite of
+<code>05</code>'s several-fold improvement on retail. And the gap ablation itself
+doesn't port: on contractual data, changing the gap changes which customers
+count as churners, so the two arms score differently-labelled panels
+(<code>07</code> measures this directly). No claim about gap contribution is made
+across both datasets.</p>
+<h2>Why it matters</h2>
+<p>A model selected on an inflated offline metric is selected on the wrong
+criterion. Worse, a <em>ranking</em> metric says nothing about whether the predicted
+probabilities are usable for a retention decision, so this repo also covers
+calibration and the expected-value threshold that follows from it.</p>
+<h2>Datasets</h2>
+<p>Two panels, chosen because they have real event timestamps:</p>
+<ul>
+<li><strong>KKBox WSDM Churn Challenge</strong>: contractual subscription churn, with
+membership expiry, renewals and cancellations.</li>
+<li><strong>Online Retail II (UCI)</strong>: non-contractual churn, where the event is never
+observed and has to be inferred.</li>
+</ul>
+<p>Showing the same failure in both settings is what makes this a method rather
+than a case study. See <a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0003-dataset-selection.md">ADR-0003</a> for why
+the popular Telco churn dataset cannot be used for this.</p>
+<h2>The portable version</h2>
+<p><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/checklist.md"><code>docs/checklist.md</code></a> distils what the notebooks found
+into eleven checks you can run against a churn dataset this repo has never
+seen. It names the failure each check catches and what changes between a
+small dataset and a large one, and it reads on its own without the rest of
+the repo.</p>
+<h2>Reproducing</h2>
+<pre><code class="language-powershell">uv sync
+uv run churnval fetch retail
+.\make.ps1 nb
+</code></pre>
+<h2>Contents</h2>
+<ul>
+<li><code>notebooks/</code>: the argument, in order. Start at <code>00_problem_definition</code>.</li>
+<li><code>src/churnval/</code>: the implementation.</li>
+<li><code>docs/standards/</code>: the engineering and validation rules this repo follows.</li>
+<li><code>docs/adr/</code>: why things are the way they are.</li>
+</ul>
+<h2>Licence</h2>
+<p>MIT for the code. The datasets are covered by their own terms and are <strong>not</strong>
+redistributed here. The fetch script downloads them from source.</p>
+<h2>Read the notebooks</h2><ol><li><a href="00_problem_definition.html">00 Problem definition</a></li>
+<li><a href="01_naive_baseline.html">01 Naive baseline</a></li>
+<li><a href="02_leakage_diagnosis.html">02 Leakage diagnosis</a></li>
+<li><a href="03_temporal_protocol.html">03 Temporal protocol</a></li>
+<li><a href="04_the_gap.html">04 The gap</a></li>
+<li><a href="05_calibration.html">05 Calibration</a></li>
+<li><a href="06_hazard_framing.html">06 Hazard framing</a></li>
+<li><a href="07_generalisation.html">07 Generalisation</a></li>
+<li><a href="checklist.html">The portable checklist</a></li></ol></div>
+<div id="pager"><span></span><a href="00_problem_definition.html" style="text-align:right"><span class="lbl">Next</span>Problem definition</a></div>
+</div>
+</body>
+</html>
