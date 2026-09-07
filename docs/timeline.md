@@ -16,7 +16,7 @@ to the next.
 
 ## Working order
 
-Build on **Online Retail II first** — it is small enough to run the entire
+Build on **Online Retail II first**, it is small enough to run the entire
 sequence end to end in an afternoon, which gets the argument working before the
 data gets big. Then scale notebooks 00–06 to KKBox in notebook 07, keeping
 Online Retail II as the completed non-contractual reference.
