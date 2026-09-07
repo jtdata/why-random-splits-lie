@@ -23,7 +23,7 @@ index `< i` for test origin `i`, with no check on whether that origin's own
 label window had closed by the time of the test origin's `as_of`. With
 `HORIZON_DAYS = 90` (ADR-0007) and `GAP_DAYS = 7`
 (`config.DEFAULT_GAP_DAYS`), a label does not resolve until 97 days after
-its own origin — more than three of this dataset's 30-day origin steps
+its own origin, more than three of this dataset's 30-day origin steps
 (`3 × 30 = 90 < 97 ≤ 4 × 30 = 120`). That means the three most recent
 origins before *any* test origin still had open, unresolved label windows
 at that simulated point in time, every time. Training on them uses real,
@@ -31,7 +31,7 @@ correctly-computed labels that would not actually have been knowable yet
 in a live deployment. This was verified directly (`origins[j].label_end`
 against `origins[i].as_of` for every origin pair, not assumed) and
 confirmed to inflate the pooled backtest ROC AUC from 0.765 (fixed) to
-0.788 (bug) — an inflation the same rough size as several of the leaks
+0.788 (bug), an inflation the same rough size as several of the leaks
 `01`/`02` diagnosed, found this time in the notebook meant to be correct.
 
 ## Decision
@@ -42,7 +42,7 @@ the most recent `K`), filtered by a **label-maturity purge**: a training
 origin is only used if `origin.label_end <= test_origin.as_of`. A test
 origin left with zero mature training origins is skipped entirely rather
 than trained on immature labels. For this dataset's constants, this always
-purges exactly the three most recent origins before any test origin — a
+purges exactly the three most recent origins before any test origin, a
 property of `HORIZON_DAYS + GAP_DAYS` relative to `step_days`, not a fixed
 number baked into the code.
 

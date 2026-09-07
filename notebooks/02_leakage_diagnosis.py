@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 02 — Leakage diagnosis
+# # 02 Leakage diagnosis
 #
 # **Question this notebook answers:** why is `01_naive_baseline`'s ROC AUC of
 # about 0.90 wrong, feature by feature?
@@ -254,7 +254,7 @@ for i, v in enumerate(order.to_numpy()):
     ax.text(v, i, f" {v:.3f}", va="center", fontsize=9)
 ax.set_xlabel("ROC AUC on the held-out test rows")
 ax.set_title(
-    "No single feature explains the inflation —\ndropping any one still leaves it above 0.87",
+    "No single feature explains the inflation,\ndropping any one still leaves it above 0.87",
     loc="left",
 )
 for side in ("top", "right"):

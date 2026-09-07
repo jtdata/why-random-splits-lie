@@ -31,7 +31,7 @@ papermill for publication.
 | Option | Why it was plausible | Why it was rejected |
 |---|---|---|
 | Everything in notebooks | Fastest to write; matches the Databricks habit | The split and as-of logic cannot be unit tested; notebook diffs are unreviewable; a leakage bug would be invisible |
-| Everything in scripts, notebooks only for charts | Cleanest engineering | Loses the narrative, which is the deliverable — this repo is read more than it is run |
+| Everything in scripts, notebooks only for charts | Cleanest engineering | Loses the narrative, which is the deliverable; this repo is read more than it is run |
 | Notebooks committed with outputs | A reader sees results without running anything | Enormous diffs, merge conflicts on every run, and a standing risk of committing data values inside outputs |
 | `nbdev` | Solves the notebook/module split properly | Imposes a whole framework and directory convention on a project whose audience will not be reading it as a library |
 

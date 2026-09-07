@@ -1,7 +1,7 @@
 [project]
 name = "churnval"
 version = "0.1.0"
-description = "Temporal validation for churn models — why random splits lie"
+description = "Temporal validation for churn models, why random splits lie"
 requires-python = ">=3.12"
 dependencies = [
     "duckdb>=1.1",

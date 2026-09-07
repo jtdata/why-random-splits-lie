@@ -28,7 +28,7 @@ first project is the origin copy; later projects copy it and record intentional
 divergence as an ADR in the new project.
 
 The workspace root `CLAUDE.md` holds only the working agreement between the
-author and Claude Code — private, machine-specific, and inherited by every
+author and Claude Code: private, machine-specific, and inherited by every
 project because Claude Code walks up the directory tree.
 
 ## Alternatives considered
@@ -37,7 +37,7 @@ project because Claude Code walks up the directory tree.
 |---|---|---|
 | Portfolio monorepo | Standards defined once, no drift; one push | Visitors land on a folder listing rather than a project; three unrelated tracks share one history and issue tracker; a reviewer clones 3 projects to read 1 |
 | Per-project repos + a standards repo as a git submodule | Rigorous single source of truth | Submodules are a well-known friction point for readers and for CI; a cloned repo with an uninitialised submodule has no standards at all |
-| Standards only in the workspace root | No duplication | Invisible to anyone who clones the repo — defeats the purpose of publishing them |
+| Standards only in the workspace root | No duplication | Invisible to anyone who clones the repo; defeats the purpose of publishing them |
 
 ## Consequences
 

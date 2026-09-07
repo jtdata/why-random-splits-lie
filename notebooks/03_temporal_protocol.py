@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 03 — Temporal protocol
+# # 03 Temporal protocol
 #
 # **Question this notebook answers:** what does the correct design look
 # like?
@@ -293,7 +293,7 @@ po_90, preds_90 = rolling_origin_backtest(
     max_lookback_days=90,
 )
 print(
-    f"90d window: {len(po_90)} origins tested (0 expected — shorter than the 97-day maturity floor)"
+    f"90d window: {len(po_90)} origins tested (0 expected, shorter than the 97-day maturity floor)"
 )
 
 po_365, _ = rolling_origin_backtest(

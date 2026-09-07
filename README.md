@@ -26,12 +26,12 @@ a measurement of how much the first number was lying.
 | Temporal split, no gap | 0.766 | 0.799 | 0.189 |
 | Temporal split with gap, rolling origin | 0.765 | 0.795 | 0.192 |
 
-The gap between the first row and the last is 0.138 ROC AUC — the size of
+The gap between the first row and the last is 0.138 ROC AUC, the size of
 the lie. PR AUC falls by a comparable 0.149 and Brier gets 56% worse in
 relative terms, so this isn't a ranking-metric artifact.
 
 Most of that gap closes as soon as the features and the split are fixed.
-Adding the operational gap back in costs nothing further here — but that
+Adding the operational gap back in costs nothing further here, but that
 ablation is narrower than it looks, because this project's `gap_days` moves
 the label window's boundary and never the feature cutoff, so it could not
 have detected a gap effect on feature leakage even if one existed (see
@@ -88,9 +88,9 @@ calibration and the expected-value threshold that follows from it.
 
 Two panels, chosen because they have real event timestamps:
 
-- **KKBox WSDM Churn Challenge** — contractual subscription churn, with
+- **KKBox WSDM Churn Challenge**: contractual subscription churn, with
   membership expiry, renewals and cancellations.
-- **Online Retail II (UCI)** — non-contractual churn, where the event is never
+- **Online Retail II (UCI)**: non-contractual churn, where the event is never
   observed and has to be inferred.
 
 Showing the same failure in both settings is what makes this a method rather
@@ -115,10 +115,10 @@ uv run churnval fetch retail
 
 ## Contents
 
-- `notebooks/` — the argument, in order. Start at `00_problem_definition`.
-- `src/churnval/` — the implementation.
-- `docs/standards/` — the engineering and validation rules this repo follows.
-- `docs/adr/` — why things are the way they are.
+- `notebooks/`: the argument, in order. Start at `00_problem_definition`.
+- `src/churnval/`: the implementation.
+- `docs/standards/`: the engineering and validation rules this repo follows.
+- `docs/adr/`: why things are the way they are.
 
 ## Licence
 

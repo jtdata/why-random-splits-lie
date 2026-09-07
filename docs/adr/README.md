@@ -2,8 +2,8 @@
 
 Decisions that closed off a real alternative, recorded when they were made.
 
-Use the `adr` skill to add one. Never edit an accepted ADR's substance —
-supersede it with a new record and link both ways.
+Use the `adr` skill to add one. Never edit an accepted ADR's substance.
+Supersede it with a new record and link both ways.
 
 | # | Decision | Status | Date |
 |---|---|---|---|

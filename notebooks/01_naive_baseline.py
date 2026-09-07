@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 01 — Naive baseline
+# # 01 Naive baseline
 #
 # > ## ⚠️ THIS NOTEBOOK IS WRONG ON PURPOSE
 # >
@@ -298,7 +298,7 @@ ax.legend(handles=shape_legend, frameon=False, fontsize=8, loc="upper left")
 ax.set_xlabel("recency_days, computed strictly before as_of")
 ax.set_ylabel("recency_days, naive_features (full history, ignores as_of)")
 ax.set_title(
-    "Each colour is one scoring date — the streaks above are as_of cohorts, not noise",
+    "Each colour is one scoring date: the streaks above are as_of cohorts, not noise",
     loc="left",
 )
 for side in ("top", "right"):
@@ -485,7 +485,7 @@ for ax in axes:
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
 fig.suptitle(
-    "Random split (the wrong way): every view agrees the model looks strong — that's the inflation",
+    "Random split (the wrong way): every view agrees the model looks strong, that's the inflation",
     fontsize=10,
 )
 fig.tight_layout()
@@ -541,7 +541,7 @@ top_importances = importances.tail(10)
 fig, ax = plt.subplots(figsize=(6, 2.5))
 ax.barh(top_importances.index, top_importances.to_numpy(), color=PALETTE["active"])
 ax.set_xlabel("LightGBM split-count importance")
-ax.set_title("No lone dominant feature — all three carry real weight", loc="left")
+ax.set_title("No lone dominant feature, all three carry real weight", loc="left")
 for side in ("top", "right"):
     ax.spines[side].set_visible(False)
 fig.tight_layout()

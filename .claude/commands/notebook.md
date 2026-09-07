@@ -10,9 +10,9 @@ Work on notebook **$ARGUMENTS** from this project's sequence.
 Read, in this order, and do not skip any of them:
 
 - `CLAUDE.md` (this project) and the standards it imports
-- `docs/timeline.md` — find the row for notebook $ARGUMENTS: the question it
+- `docs/timeline.md`, find the row for notebook $ARGUMENTS: the question it
   answers, what it consumes, what it produces
-- `docs/adr/README.md` — what is already decided. Do not relitigate an accepted
+- `docs/adr/README.md`, what is already decided. Do not relitigate an accepted
   ADR; propose superseding it if you disagree
 - The previous notebook in the sequence, so you inherit its outputs and its
   closing finding
@@ -28,8 +28,8 @@ anything in the timeline row you think is wrong.
 
 Work in this order, and pause after each numbered step so I can look:
 
-1. **Frame it.** Write only the notebook's opening markdown cell — question,
-   inputs, outputs, approximate runtime — into
+1. **Frame it.** Write only the notebook's opening markdown cell (question,
+   inputs, outputs, approximate runtime) into
    `notebooks/$ARGUMENTS_*.py` (the jupytext `.py`, which I will convert).
    If notebook $ARGUMENTS is the deliberately-wrong one, the banner stating so
    goes here and must be impossible to miss.
@@ -37,7 +37,7 @@ Work in this order, and pause after each numbered step so I can look:
 2. **Implement in `src/`, not the notebook.** Name the module before you write
    into it. The notebook imports and narrates; anything longer than ~25 lines,
    reusable, or encoding a decision belongs in a module. Write the test in
-   `tests/` in the same step, with hand-computed expected values — not values
+   `tests/` in the same step, with hand-computed expected values, not values
    read back from your own implementation.
 
 3. **Write the notebook body.** Markdown before every code cell, explaining
@@ -46,18 +46,18 @@ Work in this order, and pause after each numbered step so I can look:
    visible cell and written to `reports/`.
 
 4. **Audit.** Run the `leakage-audit` skill against whatever this notebook
-   builds — features, split, or label. Record the findings in a markdown cell,
+   builds: features, split, or label. Record the findings in a markdown cell,
    including the checks that came back clean. If the notebook is the
    deliberately-wrong one, the audit output *is* the point: keep it.
 
 5. **Adversarial review.** Launch the `validation-reviewer` agent against the
    notebook and any module you changed. Report its findings verbatim before
-   you act on them. If you disagree with a finding, say so and why — do not
+   you act on them. If you disagree with a finding, say so and why, do not
    silently drop it.
 
 6. **Record decisions.** For anything you chose over a plausible alternative,
    use the `adr` skill. Dataset handling, label definition, gap length, model
-   family, calibrator — all qualify. Say "no ADR needed" explicitly if none do.
+   family, calibrator: all qualify. Say "no ADR needed" explicitly if none do.
 
 7. **Close the loop.** Write the closing markdown cell: the finding in plain
    language and what the next notebook does with it. Then run:
@@ -68,7 +68,7 @@ Work in this order, and pause after each numbered step so I can look:
    uv run pytest
    ```
 
-   Report the results and **stop**. I review and commit — you do not.
+   Report the results and **stop**. I review and commit, you do not.
 
 ## Rules that override anything above
 

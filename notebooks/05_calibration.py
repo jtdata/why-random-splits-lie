@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 05 — Calibration
+# # 05 Calibration
 #
 # **Question this notebook answers:** are the corrected model's predicted
 # probabilities usable for a retention decision, or only well ranked?

@@ -25,7 +25,7 @@ Add to `.claude/settings.json` (merge into the existing object):
 ## Windows notes
 
 - Without Git Bash installed, hook commands run through PowerShell or CMD, so
-  `2>/dev/null` will not work — use `2>nul`.
+  `2>/dev/null` will not work; use `2>nul`.
 - If Git Bash is installed but not found automatically, point at it in
   `~/.claude/settings.json`:
 

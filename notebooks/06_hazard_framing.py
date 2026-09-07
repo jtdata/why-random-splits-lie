@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 06 — Hazard framing
+# # 06 Hazard framing
 #
 # **Question this notebook answers:** does *when* a customer churns behave
 # differently from *whether*? Does a discrete-time hazard model catch

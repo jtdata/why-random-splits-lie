@@ -1,7 +1,7 @@
 """Command line entry point.
 
 Datasets are fetched, never committed. Each fetcher writes into data/raw and
-then stops — conversion to Parquet happens in notebook 00 so it is visible in
+then stops; conversion to Parquet happens in notebook 00 so it is visible in
 the narrative rather than hidden in a script.
 """
 
@@ -61,7 +61,7 @@ def fetch_kkbox() -> None:
         f'-f transactions.csv.7z -p "{PATHS.raw}"\n'
         "  kaggle competitions download -c kkbox-churn-prediction-challenge "
         f'-f members_v3.csv.7z -p "{PATHS.raw}"\n\n'
-        "Skip user_logs unless you specifically need it — it is tens of GB and\n"
+        "Skip user_logs unless you specifically need it; it is tens of GB and\n"
         "the core argument does not use it."
     )
 

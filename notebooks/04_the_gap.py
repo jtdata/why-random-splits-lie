@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 04 — The gap
+# # 04 The gap
 #
 # **Question this notebook answers:** how big is the lie?
 #
@@ -422,7 +422,7 @@ ax0.plot(
 ax0.text(0.5, skew_bracket_y + 0.012, f"serving skew: {serving_skew:.3f}", ha="center", fontsize=9)
 fig.suptitle(
     f"Naive training scores {result_a.roc_auc:.3f} ROC AUC only if it can see the future (A); "
-    f"served with the features that actually exist (B), it drops to {result_b.roc_auc:.3f} — "
+    f"served with the features that actually exist (B), it drops to {result_b.roc_auc:.3f}, "
     f"{'below' if result_b.roc_auc < result_c.roc_auc else 'still above'} the correctly-trained "
     f"model's {result_c.roc_auc:.3f} (C)",
     fontsize=10,

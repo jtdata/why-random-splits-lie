@@ -151,7 +151,7 @@ ax2.set_ylim(-0.7, 0.8)
 ax2.set_yticks([])
 ax2.set_xlabel("days")
 ax2.set_title(
-    "A random 80/20 split scatters both classes across the entire timeline — no boundary to check",
+    "A random 80/20 split scatters both classes across the entire timeline, no boundary to check",
     loc="left",
     pad=14,
 )

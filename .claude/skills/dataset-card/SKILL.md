@@ -10,7 +10,7 @@ Every dataset that enters `data/raw/` gets a card in `docs/data/<name>.md`
 before it is used for anything. The card is what lets a reader trust a result
 without having the data.
 
-Compute the numbers — never estimate them. If a figure has not been computed,
+Compute the numbers, never estimate them. If a figure has not been computed,
 write UNKNOWN.
 
 ## Template
@@ -22,7 +22,7 @@ write UNKNOWN.
 - **Licence / terms:** <exact terms; state whether redistribution is permitted>
 - **Retrieved:** YYYY-MM-DD
 - **Files used:** <filenames and sizes>
-- **Redistributed in this repo:** No — fetched by `churnval fetch <name>`
+- **Redistributed in this repo:** No, fetched by `churnval fetch <name>`
 
 ## Shape
 
@@ -42,7 +42,7 @@ what happens to entities whose window has not closed.
 
 ## Known quirks
 
-Anything that would produce a wrong result if missed — duplicated keys,
+Anything that would produce a wrong result if missed: duplicated keys,
 backfilled corrections, encoding oddities, sentinel values, class balance.
 
 ## Fitness for this project

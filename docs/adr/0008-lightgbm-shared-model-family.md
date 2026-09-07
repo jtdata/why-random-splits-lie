@@ -31,9 +31,9 @@ comparison, not a replacement for this classifier.
 
 | Option | Why it was plausible | Why it was rejected |
 |---|---|---|
-| Logistic regression | Directly interpretable coefficients — would make the tautological closing section's "`recency_days` *is* the label" point almost visually obvious via a coefficient near the threshold boundary, on top of the `single_feature_auc` check already used | Weaker baseline for the multi-feature, as-of-safe protocol `03` builds and for the hazard-model comparison in `06`; this project wants one model family end to end for the isolation argument above, not the most interpretable model for `01` in isolation |
+| Logistic regression | Directly interpretable coefficients, which would make the tautological closing section's "`recency_days` *is* the label" point almost visually obvious via a coefficient near the threshold boundary, on top of the `single_feature_auc` check already used | Weaker baseline for the multi-feature, as-of-safe protocol `03` builds and for the hazard-model comparison in `06`; this project wants one model family end to end for the isolation argument above, not the most interpretable model for `01` in isolation |
 | Random forest | A comparably strong, similarly non-linear tree ensemble | Slower to tune, and less directly aligned with the calibration work in `05_calibration`, where LightGBM's probability outputs are the more common pairing. Not a hard blocker either way, but no reason to prefer it over LightGBM |
-| A different model per notebook, chosen for whatever fits each notebook's narrower purpose best | Each notebook could use its "best" model on its own terms | Directly reintroduces the confounding problem this ADR exists to avoid — `04_the_gap`'s headline number would be unable to distinguish "the split was fixed" from "the model also changed" |
+| A different model per notebook, chosen for whatever fits each notebook's narrower purpose best | Each notebook could use its "best" model on its own terms | Directly reintroduces the confounding problem this ADR exists to avoid; `04_the_gap`'s headline number would be unable to distinguish "the split was fixed" from "the model also changed" |
 
 ## Consequences
 
@@ -48,6 +48,6 @@ too?" and this repo would not yet have an answer.
 
 **Revisit if:** a later notebook (e.g. `07_generalisation`, or explicit
 reviewer feedback) specifically wants to demonstrate the gap is not an
-artifact of one model family — in which case add a secondary model (e.g.
+artifact of one model family, in which case add a secondary model (e.g.
 logistic regression) as a robustness check alongside LightGBM, not as its
 replacement.

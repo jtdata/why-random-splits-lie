@@ -24,13 +24,13 @@ decisions already settled.
 Every model in this repo is validated by time, with an explicit gap between the
 feature as-of date and the label window, and evaluated with a rolling-origin
 backtest. The one exception is `01_naive_baseline`, which does it wrong **on
-purpose** — that notebook must carry a prominent warning banner in its opening
+purpose**: that notebook must carry a prominent warning banner in its opening
 markdown cell so it can never be mistaken for the recommended approach.
 
 ## Layout
 
 ```
-src/churnval/      importable logic — config, io, features, splits, evaluation
+src/churnval/      importable logic: config, io, features, splits, evaluation
 notebooks/         numbered narrative, jupytext-paired
 docs/adr/          decision records
 docs/standards/    the rules this repo follows (published with the repo)

@@ -2,7 +2,7 @@
 
 The standard for this project is that a ranking metric is never reported alone.
 Every result carries a discrimination metric, a calibration metric, and the
-prevalence it was measured against — because AUC without prevalence is not
+prevalence it was measured against, because AUC without prevalence is not
 interpretable and a ranking without calibration is not a decision.
 """
 
@@ -33,7 +33,7 @@ def score(y_true: np.ndarray, y_prob: np.ndarray, label: str) -> Result:
 
     Args:
         y_true: binary outcomes.
-        y_prob: predicted probabilities, not scores — Brier is meaningless on
+        y_prob: predicted probabilities, not scores; Brier is meaningless on
             an uncalibrated decision function.
         label: how this result is described in the comparison table.
     """

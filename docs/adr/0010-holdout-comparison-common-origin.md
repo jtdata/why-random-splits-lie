@@ -56,17 +56,17 @@ actually be served, and if you serve it honestly, how does it compare":
   set `03`'s own with-gap panel independently produced for the same origin,
   checked, not assumed, since `naive_baseline.eligible_customers` and
   `splits.eligible_customers` are deliberately separate implementations.
-- **Arm A — naive trained, naive features at scoring.** Reproduces what
+- **Arm A: naive trained, naive features at scoring.** Reproduces what
   `01` would report at this date. Kept and shown, but labelled explicitly
   as impossible to serve, not as a legitimate result: it requires a feature
   computed from data that does not exist yet at scoring time.
-- **Arm B — naive trained, as-of features at serving.** The same fitted
+- **Arm B: naive trained, as-of features at serving.** The same fitted
   model as A, scored with `churnval.features.asof_features` computed
   strictly before the common `as_of`, the features an actual deployment
   would have. This is the honest number for "what if we shipped the
   naively-trained model," and the gap between A and B is training/serving
   skew, named and computed directly.
-- **Arm C — correctly trained, as-of features.** `03`'s own protocol,
+- **Arm C: correctly trained, as-of features.** `03`'s own protocol,
   reused directly from the with-gap backtest's last row at the same
   origin, not refit.
 

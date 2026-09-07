@@ -1,4 +1,4 @@
-# data — never committed, always fetched
+# data, never committed, always fetched
 data/**
 # the next line re-includes directories so git descends into them;
 # without it the .gitkeep negation below can never match
