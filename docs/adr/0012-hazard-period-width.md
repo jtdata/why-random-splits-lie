@@ -43,8 +43,8 @@ anything sharper to learn from.
 
 | Option | Why it was plausible | Why it was rejected |
 |---|---|---|
-| Weekly periods (7 days, ~13 periods) | Finer temporal resolution — could show exactly which week risk peaks in | The RFM features have no signal at weekly resolution to justify it; the person-period expansion would grow roughly 4x for no corresponding gain in what the model could learn, and `06`'s own results confirm this after the fact — the 30-day hazard curve is already only mildly non-flat (0.194/0.193/0.171), suggesting a finer grain would mostly add noise, not structure |
-| A single period (equivalent to the binary classifier) | Not really an alternative — this is what `03` already does | Defeats the purpose of this notebook, which exists specifically to check whether period-level resolution reveals anything the binary label can't |
+| Weekly periods (7 days, ~13 periods) | Finer temporal resolution — could show exactly which week risk peaks in | The RFM features have no signal at weekly resolution to justify it; the person-period expansion would grow roughly 4x for no corresponding gain in what the model could learn, and `06`'s own results confirm this after the fact The 30-day hazard curve is already only mildly non-flat (0.194/0.193/0.171), suggesting a finer grain would mostly add noise, not structure |
+| A single period (equivalent to the binary classifier) | Not really an alternative, this is what `03` already does | Defeats the purpose of this notebook, which exists specifically to check whether period-level resolution reveals anything the binary label can't |
 | Unequal-width periods (e.g., a short first period to isolate "immediate" returners, wider periods after) | Some prior literature front-loads the earliest window, on the theory early risk behaves differently | No prior evidence in this dataset that early risk is qualitatively different rather than just quantitatively similar (`06`'s own hazard curve shows periods 1 and 2 nearly equal, 0.194 vs. 0.193) before ever building it; adds a second, harder-to-justify parameter (where to place the boundary) for a benefit not yet demonstrated to exist |
 
 ## Consequences
@@ -56,11 +56,11 @@ project cadence (`DEFAULT_STEP_DAYS`) rather than introducing a new,
 unrelated time constant.
 
 **Bad:** 3 periods is coarse enough that the hazard curve can only say
-"risk is roughly flat, tapering slightly in the final third" — it cannot
+"risk is roughly flat, tapering slightly in the final third". It cannot
 resolve anything sharper (a spike in week 2, say) even if one existed.
 
 **Revisit if:** the KKBox scale-up (`07`) has a shorter natural horizon or
 a higher-frequency feature set (e.g., login events, session-level
 activity) where finer-grained hazard resolution would have something real
-to learn from — re-derive the period width for that dataset rather than
+to learn from, re-derive the period width for that dataset rather than
 reusing 30 days by default.
