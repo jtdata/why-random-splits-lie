@@ -25,6 +25,14 @@ import matplotlib.pyplot as plt
 #:   as "active".
 #: * ``neutral`` / ``reference_line`` -- axis furniture: diagonal
 #:   references, "no-signal" baselines, chance lines.
+#: * ``emphasis`` -- highlighting *one bar or point among otherwise-neutral
+#:   ones* (e.g. the 30-day plan in a `payment_plan_days` histogram, or one
+#:   origin called out on a per-origin chart). Not a class label and not a
+#:   split label -- never reused for "churned"/"active" or "train"/"test",
+#:   which already own their own colours above. Validated with
+#:   `dataviz/scripts/validate_palette.js` against the categorical set
+#:   (`active`/`churned`/`train`/`test`/`both`) before adding: CVD and
+#:   normal-vision separation both pass against every one of them.
 PALETTE = {
     "active": "#4B44A6",
     "churned": "#B0432E",
@@ -33,7 +41,28 @@ PALETTE = {
     "both": "#D6349C",
     "neutral": "#B0B7C0",
     "reference_line": "#141D26",
+    "emphasis": "#1F6FEB",
 }
+
+#: One-hue, monotone-lightness ramp for *ordinal* dimensions -- a discrete,
+#: ordered sequence where position carries meaning (e.g. successive `as_of`
+#: scoring dates), as distinct from the categorical roles above (identity,
+#: order-independent). Ten steps (250-700) from the palette skill's
+#: validated default sequential-blue ramp, already checked against the 2:1
+#: light-surface floor at the light end -- not eyeballed. Index 0 is the
+#: earliest/lightest step; -1 is the latest/darkest.
+ORDINAL_BLUE_10 = [
+    "#86B6EF",
+    "#6DA7EC",
+    "#5598E7",
+    "#3987E5",
+    "#2A78D6",
+    "#256ABF",
+    "#1C5CAB",
+    "#184F95",
+    "#104281",
+    "#0D366B",
+]
 
 
 def set_style() -> None:

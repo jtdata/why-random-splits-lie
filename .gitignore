@@ -26,6 +26,9 @@ reports/_site/
 dist/
 build/
 *.egg-info/
+# DuckDB's on-disk spill directory for large queries (e.g. the KKBox ASOF
+# JOIN, gigabytes under memory pressure) -- ephemeral, never intended output
+.tmp/
 
 # personal / machine-local
 CLAUDE.local.md

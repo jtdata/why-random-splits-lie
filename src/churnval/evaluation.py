@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 
 import numpy as np
+import pandas as pd
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 
 
@@ -80,3 +81,50 @@ def expected_value(
     n_targeted = int(targeted.sum())
     true_churners_targeted = int(np.asarray(y_true)[targeted].sum())
     return true_churners_targeted * save_rate * saved_margin - n_targeted * offer_cost
+
+
+def sweep_expected_value(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    thresholds: np.ndarray,
+    *,
+    offer_cost: float,
+    saved_margin: float,
+    save_rate: float,
+) -> pd.DataFrame:
+    """`expected_value` evaluated at every threshold, so the optimum can be read off.
+
+    A ranking metric says a model is good at ordering customers; it says
+    nothing about *where* to draw the line, and the EV-maximizing line
+    depends on how well-calibrated the probabilities are, not just how well
+    they rank -- comparing this sweep's argmax across differently-calibrated
+    probability sets is the point of running it more than once.
+
+    Args:
+        y_true: binary outcomes.
+        y_prob: predicted probabilities in `[0, 1]`.
+        thresholds: threshold values to evaluate, in any order.
+        offer_cost, saved_margin, save_rate: see `expected_value`.
+
+    Returns:
+        One row per threshold, columns `threshold`, `n_targeted`,
+        `expected_value`, sorted by `threshold` ascending.
+    """
+    y_true = np.asarray(y_true)
+    y_prob = np.asarray(y_prob)
+    rows = [
+        {
+            "threshold": float(t),
+            "n_targeted": int((y_prob >= t).sum()),
+            "expected_value": expected_value(
+                y_true,
+                y_prob,
+                t,
+                offer_cost=offer_cost,
+                saved_margin=saved_margin,
+                save_rate=save_rate,
+            ),
+        }
+        for t in thresholds
+    ]
+    return pd.DataFrame(rows).sort_values("threshold").reset_index(drop=True)

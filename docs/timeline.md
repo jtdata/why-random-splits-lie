@@ -12,14 +12,14 @@ to the next.
 | 04 | `04_the_gap` | How big is the lie? | The headline chart and the README results table |
 | 05 | `05_calibration` | Are the probabilities usable for a decision? | Reliability curves, Brier decomposition, isotonic vs Platt, EV-optimal threshold |
 | 06 | `06_hazard_framing` | Does "when" behave differently from "whether"? | Discrete-time hazard model compared against the binary classifier |
-| 07 | `07_generalisation` | Does the same failure appear in non-contractual churn? | The Online Retail II replication; the portable checklist |
+| 07 | `07_generalisation` | Does the same failure appear in contractual churn, at scale? | The KKBox replication of `00`-`06`'s protocol; the portable checklist |
 
 ## Working order
 
 Build on **Online Retail II first** — it is small enough to run the entire
 sequence end to end in an afternoon, which gets the argument working before the
-data gets big. Then scale notebooks 00–06 to KKBox and keep Online Retail II as
-the notebook 07 replication.
+data gets big. Then scale notebooks 00–06 to KKBox in notebook 07, keeping
+Online Retail II as the completed non-contractual reference.
 
 ## Definition of done
 

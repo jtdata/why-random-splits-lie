@@ -68,18 +68,25 @@ class Window:
 
 
 def assert_no_leak(window: Window) -> None:
-    """Fail loudly if the feature and label windows can touch.
+    """Fail loudly if the feature and label windows can touch, or if there's no gap.
 
-    A gap of zero is permitted only because notebook 01 needs to demonstrate
-    what it costs — but it is never silent.
+    Not called from any production path (`rolling_origins`, `build_asof_panel`,
+    `rolling_origin_backtest` never invoke it) -- only from tests. A notebook
+    deliberately demonstrating what `gap_days=0` costs (`01_naive_baseline`)
+    does that by simply not calling this function, not by an escape hatch on
+    it; there is no such escape hatch here; `gap_days=0` always raises if this
+    function is called at all. Kept as an explicit, callable check for the
+    day a production path wants to opt into it, rather than delivered as an
+    inline assertion buried in `rolling_origins`.
     """
     if window.label_start < window.feature_end:
         raise ValueError(f"label window starts before features end: {window.describe()}")
     if window.gap_days == 0:
         raise ValueError(
             "gap_days=0 lets features computed at the as-of instant encode the "
-            "event. Pass gap_days=0 only via allow_zero_gap=True in the caller "
-            "that is deliberately demonstrating the failure."
+            "event. This function does not accept a zero gap under any argument; "
+            "a caller deliberately demonstrating that failure (01_naive_baseline) "
+            "must not call it, and should say so."
         )
 
 

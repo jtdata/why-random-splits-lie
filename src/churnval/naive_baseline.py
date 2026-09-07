@@ -26,8 +26,13 @@ dataset specifically.
 kept only for the closing "why a perfect score is a bug report" section of
 the notebook -- it is not part of the three-mistake panel above.
 
-Nothing in this module is imported by notebook 03 onward. See the warning
-banner in `01_naive_baseline.py`.
+None of the panel, feature, or split logic in this module is reused by
+notebook 03 onward -- see the warning banner in `01_naive_baseline.py`.
+`03_temporal_protocol` does import the `HORIZON_DAYS` constant alone, as a
+shared dataset-level fact (this dataset's purchase cadence, ADR-0007), not
+as a dependency on any of the wrong-on-purpose logic above; see ADR-0007's
+"Revisit if" for why that constant does not yet live somewhere more
+neutral than this module.
 """
 
 from __future__ import annotations

@@ -47,6 +47,11 @@ SEED = 20260825
 DEFAULT_GAP_DAYS = 7
 
 #: Length of the label window in days: "does this entity churn within N days".
+#: Online Retail II overrides this with its own 90-day `HORIZON_DAYS`
+#: (`churnval.naive_baseline`, ADR-0007) for every notebook that scores it —
+#: this default is not currently used for that dataset. It remains the
+#: value later notebooks reach for first when scoring KKBox, whose monthly
+#: billing cadence is the case this default was written for.
 DEFAULT_HORIZON_DAYS = 30
 
 #: Spacing between successive origins in the rolling-origin backtest.
