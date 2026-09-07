@@ -6,7 +6,7 @@
 
 ## Context
 
-This project produces many runs that differ only in validation configuration —
+This project produces many runs that differ only in validation configuration:
 split strategy, gap length, origin date, calibrator. Comparing them by hand is
 error-prone, and the comparison *is* the result, so it has to be auditable.
 
@@ -19,14 +19,14 @@ not be blocked on it.
 Track every run to a local file store at `./mlruns` via
 `MLFLOW_TRACKING_URI=file:./mlruns`. Log the validation configuration as
 parameters, every metric in the reporting set, and the reliability curve and
-gap chart as artefacts. `mlruns/` is gitignored.
+gap chart as artifacts. `mlruns/` is gitignored.
 
 ## Alternatives considered
 
 | Option | Why it was plausible | Why it was rejected |
 |---|---|---|
 | MLflow server on TrueNAS now | Persistent, always on, screenshots well, mirrors the Databricks workspace | Blocks the project on infrastructure work; a reviewer cloning the repo cannot reach it, so results would not be reproducible from the repo alone |
-| A CSV of results | No dependency at all | Loses artefacts and parameter provenance; the comparison table is the deliverable and needs to be regenerable |
+| A CSV of results | No dependency at all | Loses artifacts and parameter provenance; the comparison table is the deliverable and needs to be regenerable |
 | Weights & Biases | Better UI, hosted, free tier | Sends run data to a third party, and adds an account requirement for anyone reproducing the work |
 
 ## Consequences
