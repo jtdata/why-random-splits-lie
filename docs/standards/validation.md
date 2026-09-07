@@ -1,6 +1,6 @@
 # Validation standards
 
-This is the substantive standard of the portfolio — the others are hygiene.
+This is the substantive standard of the portfolio, the others are hygiene.
 
 ## The default
 
@@ -15,7 +15,7 @@ justification.
    prediction window, label window. Drawn before any code is written. If the
    diagram cannot be drawn, the problem is not yet defined.
 2. **An explicit gap** between the feature as-of date and the start of the
-   label window. The gap is at least the operational lead time — the delay
+   label window. The gap is at least the operational lead time, the delay
    between scoring and acting. With no gap, features computed near the event
    encode the event.
 3. **Features snapshotted as-of.** Every aggregation is computed over data
@@ -50,7 +50,7 @@ justification.
 
 - State whether the recorded date is the event date or the observation date.
 - Entities whose outcome window has not closed are **censored**, not negatives.
-  Either exclude them or model them as censored — never silently label them 0.
+  Either exclude them or model them as censored, never silently label them 0.
 - Where "when" matters as well as "whether", fit a hazard model alongside the
   binary classifier and compare what each gets wrong.
 
