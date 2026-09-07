@@ -1,0 +1,8 @@
+{
+  "label": "Temporal split with gap, rolling origin",
+  "n": 25922,
+  "prevalence": 0.5918524805184785,
+  "roc_auc": 0.7648511511575153,
+  "pr_auc": 0.7946545722898362,
+  "brier": 0.19166875499910824
+}

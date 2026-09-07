@@ -19,56 +19,55 @@
 # > ## ⚠️ THIS NOTEBOOK IS WRONG ON PURPOSE
 # >
 # > Everything through "The number" below reproduces three validation
-# > mistakes real churn tutorials make, at once. The resulting metric is not
-# > a legitimate estimate of anything. It exists so that notebook
-# > `02_leakage_diagnosis` has a real number to take apart, and so that
-# > notebook `04_the_gap` has something to subtract the honest number from.
-# > A fourth, more extreme version closes the notebook separately — see
-# > "The version that scores 1.000" near the end.
+# > mistakes that real churn tutorials make, all at once. The resulting metric
+# > is not a legitimate estimate of anything. It exists so that
+# > `02_leakage_diagnosis` has a real number to take apart and `04_the_gap`
+# > has something to subtract the honest number from. A fourth, more extreme
+# > version closes the notebook separately ("The version that scores 1.000").
 # >
 # > **Do not reuse anything in `src/churnval/naive_baseline.py` outside this
 # > notebook.** The correct feature and split logic is built from scratch in
 # > `03_temporal_protocol`.
 #
-# **Question this notebook answers:** what does the conventional approach
+# **Question this notebook answers:** What does the conventional approach
 # report, if it is built faithfully the way most tutorials build it?
 #
 # **Consumes:** `data/raw/online_retail_ii/online_retail_ii.xlsx`, fetched by
 # `uv run churnval fetch retail`.
 #
-# **Produces:** the "Random split (the wrong way)" row of the README results
+# **Produces:** The "Random split (the wrong way)" row of the README results
 # table, written to `reports/results_naive.json`; a dataset card for Online
 # Retail II at `docs/data/online_retail_ii.md`; supporting diagnostic charts
 # in `reports/figures/`.
 #
-# **Runtime:** a few minutes — the dataset is ~1M rows, read once from Excel
-# and cached to Parquet.
+# **Runtime:** A few minutes. The dataset is about 1M rows, read once from
+# Excel and cached to Parquet.
 #
 # ---
 #
-# The label itself is forward-looking and built honestly: at each of several
-# scoring occasions (`as_of` dates, from `churnval.windows.rolling_origins`),
-# a customer "churns" if they make no purchase during the label window that
-# opens after that `as_of`. Getting the label right is not the point of this
-# notebook — the three mistakes below are:
+# The label itself is built honestly and looks forward: at each of several
+# scoring occasions (`as_of` dates from `churnval.windows.rolling_origins`), a
+# customer "churns" if they make no purchase during the label window that
+# opens after that `as_of`. The three mistakes are in everything around the
+# label:
 #
-# 1. **Features ignore `as_of`.** Recency, Frequency and Monetary value are
+# 1. **Features ignore `as_of`.** Recency, frequency and monetary value are
 #    computed once over a customer's *entire* history and reused unchanged
 #    at every scoring occasion that customer appears in. A customer scored
 #    in December and the same customer scored the following August get
 #    identical features.
-# 2. **The split ignores entity identity.** Each (customer, as_of) pair is
+# 2. **The split ignores entity identity.** Each (customer, `as_of`) pair is
 #    one row. A random 80/20 row split lets the same customer's rows land in
-#    both train and test — the model can see how a customer's history plays
+#    both train and test, so the model can see how a customer's history plays
 #    out at one point in time while being tested on that same customer at
 #    another.
-# 3. **No gap.** `GAP_DAYS = 0` — features and the label window touch
-#    directly, with none of the operational lead time
-#    `churnval.config.DEFAULT_GAP_DAYS` represents elsewhere in this repo.
+# 3. **No gap.** `GAP_DAYS = 0`. Features and the label window touch, with
+#    none of the operational lead time that `churnval.config.DEFAULT_GAP_DAYS`
+#    represents elsewhere in this repo.
 #
-# None of this is hidden. It is built the same way a tutorial would build it,
-# so that what it costs can be measured honestly in the notebooks that
-# follow. See [ADR-0007](../docs/adr/0007-online-retail-ii-naive-panel-definition.md)
+# None of this is hidden. It is built the way a tutorial would build it, so
+# that the cost can be measured in the notebooks that follow. See
+# [ADR-0007](../docs/adr/0007-online-retail-ii-naive-panel-definition.md)
 # for why this dataset uses a 90-day horizon and a 365-day eligibility
 # lookback rather than the project-wide defaults.
 
@@ -78,10 +77,10 @@
 # Online Retail II ships as a two-sheet Excel workbook. `churnval.io` parses
 # it once, drops rows that are not completed purchases (cancellations,
 # non-positive quantity or price, missing customer ID), and caches the result
-# to Parquet — every call after the first is a Parquet read. See
+# to Parquet. Every call after the first is a Parquet read. See
 # `docs/data/online_retail_ii.md` for the dataset card.
 
-# %%
+# %% jupyter={"source_hidden": true}
 import json
 from datetime import timedelta
 
@@ -89,6 +88,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMClassifier
+from matplotlib.colors import BoundaryNorm, ListedColormap
+from matplotlib.lines import Line2D
 from sklearn.metrics import (
     ConfusionMatrixDisplay,
     PrecisionRecallDisplay,
@@ -109,7 +110,7 @@ from churnval.naive_baseline import (
     naive_features,
     tautological_label,
 )
-from churnval.plotting import PALETTE, set_style
+from churnval.plotting import ORDINAL_BLUE_10, PALETTE, set_style
 from churnval.windows import rolling_origins
 
 PATHS.ensure()
@@ -125,15 +126,15 @@ print(
 # %% [markdown]
 # ## Build the scoring occasions
 #
-# `rolling_origins` (from `churnval.windows` — the same module the correct
+# `rolling_origins` (from `churnval.windows`, the same module the correct
 # protocol in `03_temporal_protocol` uses) generates monthly `as_of` dates.
 # The first occasion is pushed a full `ELIGIBILITY_LOOKBACK_DAYS` (365) past
 # the start of the data, so every origin has a full lookback window behind
-# it; the last is whatever origin's label window still fits inside the data.
-# `gap_days=0` is mistake #3 from the banner above, passed explicitly rather
-# than left implicit.
+# it. The last is whichever origin's label window still fits inside the
+# data. `gap_days=0` is mistake #3, passed explicitly rather than left
+# implicit.
 
-# %%
+# %% jupyter={"source_hidden": true}
 first_as_of = transactions["invoice_date"].min().normalize() + timedelta(days=365)
 last_event = transactions["invoice_date"].max()
 origins = rolling_origins(
@@ -146,43 +147,41 @@ origins = rolling_origins(
 print(f"{len(origins)} origins, {origins[0].as_of:%Y-%m-%d} to {origins[-1].as_of:%Y-%m-%d}")
 
 # %% [markdown]
-# ## Build the naive panel — mistake #1
+# ## Build the naive panel: mistake #1
 #
 # `build_naive_panel` joins each customer's *entire-history* RFM features
 # (`naive_features`, computed once) onto every origin they are eligible for.
 # Nothing here recomputes a feature from data strictly before its row's
-# `as_of` — that correct behaviour is what `03_temporal_protocol` adds.
+# `as_of`. That is what `03_temporal_protocol` adds.
 
-# %%
+# %% jupyter={"source_hidden": true}
 panel = build_naive_panel(transactions, origins)
 print(
     f"{len(panel):,} (customer, as_of) rows, {panel['customer_id'].nunique():,} distinct "
     f"customers, {panel['churned'].mean():.1%} churned overall"
 )
 
-# %% [raw]
-# Churn rate by origin — if the panel were free of the leak, this line would
-# still vary origin to origin (real seasonality), but the *features* joined
-# onto each origin would not: a customer's recency, frequency and monetary
-# value are frozen at the dataset's own end regardless of which origin's row
-# they are attached to.
+# %% [markdown]
+# Churn rate by origin. The rate varies from origin to origin because of
+# real seasonality. The features joined onto each origin do not vary at all:
+# a customer's recency, frequency and monetary value are frozen at the
+# dataset's own end, whichever origin's row they are attached to.
 
-# %%
+# %% jupyter={"source_hidden": true}
 by_origin = panel.groupby("as_of")["churned"].agg(n="size", churn_rate="mean")
 by_origin
 
 # %% [markdown]
 # ## Naive features vs. computing them strictly before `as_of`
 #
-# `naive_features` ignores `as_of` entirely — that's mistake #1 in words.
-# What does it cost in the actual numbers? `asof_recency_frequency_monetary`
-# (`churnval.asof_preview`) recomputes recency for the same (customer,
-# as_of) rows using only transactions strictly before each row's own
-# `as_of` — a lightweight preview of "as-of-safe," not the corrected
-# pipeline itself (`03_temporal_protocol` builds and tests that from
-# scratch, and may reasonably differ from this).
+# `naive_features` ignores `as_of`. What does that cost in actual numbers?
+# `asof_recency_frequency_monetary` (`churnval.asof_preview`) recomputes
+# recency for the same (customer, `as_of`) rows using only transactions
+# strictly before each row's own `as_of`. This is a lightweight preview of
+# "as-of-safe" for one chart, not the corrected pipeline. `03_temporal_protocol`
+# builds and tests that properly.
 
-# %%
+# %% jupyter={"source_hidden": true}
 asof_frames = []
 for window in origins:
     asof_feats = asof_recency_frequency_monetary(transactions, window.as_of)
@@ -200,14 +199,14 @@ comparison.groupby("churned")["recency_delta"].median().rename(
 
 # %% [markdown]
 # For customers who go on to purchase again (`churned=0`), the naive feature
-# understates staleness slightly — it's measured to the dataset's own end,
-# which is usually later than the row's `as_of`. For customers who don't
-# (`churned=1`), it *overstates* staleness by months: the naive value
-# reflects how long it's been since their last purchase as of December 2011,
-# not as of this row's own scoring date, which can make an otherwise-recent
-# lapse look far more stale than it was at the time.
+# understates staleness slightly, because it is measured to the dataset's end
+# and their later purchases pull it down. For customers who do not
+# (`churned=1`), it overstates staleness by months: the naive value reflects
+# how long it had been since their last purchase as of December 2011, not as
+# of the row's own scoring date. A lapse that was recent at the time looks
+# ancient.
 
-# %%
+# %% jupyter={"source_hidden": true}
 sample = comparison.sample(n=min(3000, len(comparison)), random_state=SEED)
 fig, ax = plt.subplots(figsize=(8, 6.5))
 for label, colour in ((0, PALETTE["active"]), (1, PALETTE["churned"])):
@@ -243,14 +242,80 @@ fig.savefig(PATHS.figures / "naive_vs_asof_recency.png", dpi=200)
 # fig
 
 # %% [markdown]
-# ## Random split across panel rows — mistake #2
+# ### The same points, coloured by scoring date instead of by label
 #
-# The split is row-level and ignores `customer_id` entirely — stratified
-# only on the label, to keep class balance stable. The count below is the
-# leak made visible: most customers who land in the test set were *already
-# seen*, at a different `as_of`, during training.
+# The chart above pools all ten origins and colours only by `churned`, which
+# leaves the diagonal streaks unexplained. Colouring each point by its
+# scoring date instead (one shade per origin, earliest lightest) resolves
+# every streak into the cohort scored on one date. Marker shape keeps
+# `churned` visible without a second colour channel.
 
-# %%
+# %% jupyter={"source_hidden": true}
+as_of_order = sorted(sample["as_of"].unique())
+as_of_rank = {origin: i for i, origin in enumerate(as_of_order)}
+sample_ranked = sample.assign(as_of_rank=sample["as_of"].map(as_of_rank))
+
+cmap = ListedColormap(ORDINAL_BLUE_10)
+norm = BoundaryNorm(range(len(as_of_order) + 1), cmap.N)
+
+fig, ax = plt.subplots(figsize=(8, 6.5))
+markers = {0: ("o", "active"), 1: ("X", "churned")}
+for label, (marker, _marker_name) in markers.items():
+    sub = sample_ranked[sample_ranked["churned"] == label]
+    ax.scatter(
+        sub["recency_days_asof"],
+        sub["recency_days_naive"],
+        c=sub["as_of_rank"],
+        cmap=cmap,
+        norm=norm,
+        marker=marker,
+        s=16 if marker == "o" else 24,
+        alpha=0.6,
+        linewidths=0.7 if marker == "X" else 0,
+    )
+ax.plot([0, lim], [0, lim], color=PALETTE["reference_line"], lw=1, ls="--")
+
+sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+cbar = fig.colorbar(sm, ax=ax, ticks=[i + 0.5 for i in range(len(as_of_order))])
+cbar.ax.set_yticklabels([origin.strftime("%Y-%m-%d") for origin in as_of_order], fontsize=7)
+cbar.set_label("as_of")
+cbar.outline.set_visible(False)
+
+shape_legend = [
+    Line2D(
+        [0],
+        [0],
+        marker=marker,
+        color="none",
+        markerfacecolor=PALETTE["reference_line"],
+        markeredgecolor=PALETTE["reference_line"],
+        markersize=7,
+        label=marker_name,
+    )
+    for marker, marker_name in markers.values()
+]
+ax.legend(handles=shape_legend, frameon=False, fontsize=8, loc="upper left")
+ax.set_xlabel("recency_days, computed strictly before as_of")
+ax.set_ylabel("recency_days, naive_features (full history, ignores as_of)")
+ax.set_title(
+    "Each colour is one scoring date — the streaks above are as_of cohorts, not noise",
+    loc="left",
+)
+for side in ("top", "right"):
+    ax.spines[side].set_visible(False)
+fig.tight_layout()
+fig.savefig(PATHS.figures / "naive_vs_asof_recency_by_origin.png", dpi=200)
+# fig
+
+# %% [markdown]
+# ## Random split across panel rows: mistake #2
+#
+# The split is row-level and ignores `customer_id` entirely. It is stratified
+# on the label only, to keep class balance stable. The count below makes the
+# leak visible: most customers who land in the test set were *already seen*,
+# at a different `as_of`, during training.
+
+# %% jupyter={"source_hidden": true}
 X = panel[["recency_days", "frequency", "monetary"]]
 y = panel["churned"]
 
@@ -263,7 +328,7 @@ print(
     f"{len(overlap):,} of them ({len(overlap) / cust_test.nunique():.1%}) also appear in train"
 )
 
-# %%
+# %% jupyter={"source_hidden": true}
 train_only = len(set(cust_train) - set(cust_test))
 test_only = len(set(cust_test) - set(cust_train))
 
@@ -287,16 +352,16 @@ fig.savefig(PATHS.figures / "naive_customer_overlap.png", dpi=200)
 # fig
 
 # %% [markdown]
-# ### Even the *rows* that land on different sides are the same people
+# ### The rows on different sides of the split are the same people
 #
-# The chart above counts customers. This one plots individual panel rows —
-# one point per (customer, as_of) — against time, for a sample of customers
-# grouped by whether their rows ended up in train only, test only, or both.
-# For "seen in both" customers, train- and test-coloured points sit right
-# next to each other on the same customer's timeline: the split intermingles
-# them, it doesn't separate them.
+# The chart above counts customers. This one plots individual panel rows
+# (one point per customer per `as_of`) against time, for a sample of
+# customers grouped by whether their rows ended up in train only, test only,
+# or both. For the "seen in both" group, train- and test-coloured points sit
+# next to each other on the same customer's timeline. The split mixes them
+# rather than separating them.
 
-# %%
+# %% jupyter={"source_hidden": true}
 row_split = pd.Series("test", index=panel.index)
 row_split.loc[X_train.index] = "train"
 
@@ -362,11 +427,11 @@ fig.savefig(PATHS.figures / "naive_split_over_time.png", dpi=200)
 # %% [markdown]
 # ## Fit and score
 #
-# LightGBM, the same model family this repo reuses in `03_temporal_protocol`
-# and `04_the_gap`, so that the difference measured later is attributable to
-# the validation design and not to a change of model.
+# LightGBM, the same model family this repo uses in `03_temporal_protocol`
+# and `04_the_gap`, so that the difference measured later comes from the
+# validation design and not from a change of model.
 
-# %%
+# %% jupyter={"source_hidden": true}
 model = LGBMClassifier(random_state=SEED, verbosity=-1)
 model.fit(X_train, y_train)
 y_prob = model.predict_proba(X_test)[:, 1]
@@ -375,15 +440,14 @@ result = score(y_test, y_prob, label="Random split (the wrong way)")
 result
 
 # %% [markdown]
-# ## What that AUC actually looks like
+# ## What that AUC looks like
 #
 # A single ranking number hides shape. The panels below show the same
-# `y_test`/`y_prob` as a confusion matrix (threshold 0.5), a ROC curve, and
-# a precision-recall curve — the pairing this project's validation standard
-# requires: a ranking view and a decision view together, not a ranking
-# number alone.
+# `y_test`/`y_prob` as a confusion matrix at a 0.5 threshold, a ROC curve,
+# and a precision-recall curve. This repo's validation standard asks for a
+# ranking view and a decision view together, never a ranking number alone.
 
-# %%
+# %% jupyter={"source_hidden": true}
 y_pred = (y_prob >= 0.5).astype(int)
 fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
 
@@ -431,15 +495,15 @@ fig.savefig(PATHS.figures / "naive_model_diagnostics.png", dpi=200)
 # %% [markdown]
 # ## Sanity check: no single feature is doing this alone
 #
-# `01`'s earlier draft anchored the label to the same reference date as
-# `recency_days`, making the two identical — a bug, not a demonstration (see
-# the closing section below). `assert_no_dominant_single_feature` is a fast
-# guard against that happening silently: it fails loudly if any one feature
-# alone nearly determines the label. Here it should pass — the inflation in
-# this notebook comes from the panel and the split, not from a tautological
-# feature.
+# An earlier draft of this notebook anchored the label to the same reference
+# date as `recency_days`, which made the two identical. That is a bug, not a
+# demonstration, and it is kept as the closing section below.
+# `assert_no_dominant_single_feature` is a cheap guard against that class of
+# bug: it fails loudly if any one feature alone nearly determines the label.
+# Here it should pass. The inflation in this notebook comes from the panel
+# and the split, not from a tautological feature.
 
-# %%
+# %% jupyter={"source_hidden": true}
 assert_no_dominant_single_feature(X, y, threshold=0.99)
 
 # %% [markdown]
@@ -447,11 +511,11 @@ assert_no_dominant_single_feature(X, y, threshold=0.99)
 #
 # A drop-one ablation on the same train/test split: refit with each feature
 # removed in turn and see how much ROC AUC is lost. If the inflation were
-# concentrated in one feature, removing it would collapse the score — as it
+# concentrated in one feature, removing it would collapse the score. (It
 # does in the tautological section below, where dropping `recency_days`
-# alone would be the whole story.
+# alone is the whole story.)
 
-# %%
+# %% jupyter={"source_hidden": true}
 ablation = {"all three (baseline)": result.roc_auc}
 for dropped in X.columns:
     cols = [c for c in X.columns if c != dropped]
@@ -464,11 +528,13 @@ pd.Series(ablation).sort_values(ascending=False)
 # %% [markdown]
 # ## Feature importance
 #
-# LightGBM's split-count importance for the fitted model. There are only
-# three features in this panel, so "top 10" is just "all of them" — but the
-# same cell works unchanged if a later notebook adds more.
+# LightGBM's split-count importance for the fitted model. Split count is a
+# coarse measure (it counts how often a feature was used, not how much it
+# helped), and with three features it says little the ablation above did not
+# already say. It is kept because the same cell works unchanged if a later
+# notebook adds more features.
 
-# %%
+# %% jupyter={"source_hidden": true}
 importances = pd.Series(model.feature_importances_, index=X.columns).sort_values()
 top_importances = importances.tail(10)
 
@@ -486,25 +552,30 @@ fig.savefig(PATHS.figures / "naive_feature_importance.png", dpi=200)
 # ## The number
 #
 # This is the "Random split (the wrong way)" row of the README results
-# table. It is written to `reports/results_naive.json` so that
-# `04_the_gap` reads it rather than retyping it.
+# table. It is written to `reports/results_naive.json` so that `04_the_gap`
+# reads it rather than retyping it.
 
-# %%
+# %% jupyter={"source_hidden": true}
 result_path = PATHS.reports / "results_naive.json"
 result_path.write_text(json.dumps(result.as_row(), indent=2))
 result.as_row()
 
 # %% [markdown]
-# ## A closer look: scoring a month we never trained on
+# ## A closer look: scoring a month the model never trained on
 #
 # Everything above evaluates on a random slice of the same panel the model
-# trained on. `origins[-1]` is the panel's last scoring occasion — the most
-# recent 90-day outcome the data can actually confirm. Holding that whole
-# month out, training only on the origins before it, and scoring on it is a
-# genuine look-forward evaluation — even though the features are still the
-# naive, `as_of`-blind ones from mistake #1.
+# trained on. `origins[-1]` is the panel's last scoring occasion, the most
+# recent 90-day outcome the data can confirm. Holding that whole month out,
+# training only on the origins before it, and scoring on it removes the
+# row-split leak (mistake #2) and nothing else. The features are still the
+# `as_of`-blind ones from mistake #1, so this is *not* a genuine forward
+# evaluation. `naive_features` measures recency to the dataset's last day,
+# which for this origin is after the end of its own label window: the
+# feature still partially encodes the outcome. `04_the_gap` takes this apart
+# properly; the point here is only that the random split hides even the
+# partial degradation a time-based holdout exposes.
 
-# %%
+# %% jupyter={"source_hidden": true}
 holdout_as_of = origins[-1].as_of
 train_mask = panel["as_of"] < holdout_as_of
 holdout_mask = panel["as_of"] == holdout_as_of
@@ -526,14 +597,13 @@ print(
 holdout_result
 
 # %% [markdown]
-# Even a genuine forward holdout degrades relative to the random split
-# above — degradation the random split hides completely. The gap stays only
-# partial, because the features themselves are still unfixed:
-# `recency_days`/`frequency`/`monetary` are still each customer's whole
-# history, and most of the holdout month's customers were already scored,
-# with those same features, at an earlier origin.
+# The holdout score is lower than the random split's, and the random split
+# would never have shown that. The drop is only partial because the features
+# are still unfixed: `recency_days`, `frequency` and `monetary` are each
+# customer's whole history, and most of the holdout month's customers were
+# already scored with those same features at an earlier origin.
 
-# %%
+# %% jupyter={"source_hidden": true}
 metric_labels = {
     "roc_auc": "ROC AUC (higher better)",
     "pr_auc": "PR AUC (higher better)",
@@ -553,7 +623,8 @@ for ax, metric in zip(axes, metric_labels, strict=True):
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
 fig.suptitle(
-    "Even with the same leaky features, a real forward holdout scores worse than a random split",
+    "Holding out the last month degrades all three metrics, even though the features still "
+    "read past it",
     fontsize=10,
 )
 fig.tight_layout()
@@ -565,12 +636,12 @@ fig.savefig(PATHS.figures / "naive_holdout_degradation.png", dpi=200)
 # ## The version that scores 1.000, and why a perfect score is a bug report
 #
 # An earlier draft of this notebook defined the label directly from the same
-# reference date `recency_days` is measured to —
+# reference date that `recency_days` is measured to.
 # `churnval.naive_baseline.tautological_label` still implements that version,
 # kept only for this closing demonstration. It is not part of the panel
 # above and nothing here feeds `reports/results_naive.json`.
 
-# %%
+# %% jupyter={"source_hidden": true}
 tautological_frame = naive_features(transactions).join(
     tautological_label(transactions, horizon_days=HORIZON_DAYS), how="inner"
 )
@@ -587,23 +658,22 @@ score(y_taut_test, taut_prob, label="tautology, random split")
 
 # %% [markdown]
 # `recency_days > HORIZON_DAYS` and `churned` are the same boolean by
-# construction — not correlated, *identical*. `single_feature_auc` shows it
-# directly: `recency_days` alone, with no model at all, already scores
-# essentially the maximum.
+# construction. `single_feature_auc` shows it directly: `recency_days` alone,
+# with no model at all, already scores essentially the maximum.
 
-# %%
+# %% jupyter={"source_hidden": true}
 single_feature_auc(X_taut, y_taut)
 
 # %% [markdown]
 # A tempting but wrong explanation is "the random split let the model
-# cheat." It didn't — the identity holds for every row regardless of which
-# split a row lands in. To prove it, split customers by *acquisition
-# cohort* instead: earliest 80% of customers by first-purchase date train
-# the model, the most recently acquired 20% test it. This is about as
-# strict a temporal split as a single-snapshot panel can have, and the
-# result is unchanged.
+# cheat". It did not. The identity holds for every row regardless of which
+# side of the split it lands on. To prove it, split customers by
+# *acquisition cohort* instead: the earliest 80% of customers by
+# first-purchase date train the model, the most recently acquired 20% test
+# it. That is about as strict a temporal split as a single-snapshot panel
+# allows, and the result is unchanged.
 
-# %%
+# %% jupyter={"source_hidden": true}
 first_purchase = transactions.groupby("customer_id")["invoice_date"].min()
 cutoff = first_purchase.quantile(0.8)
 cohort_frame = tautological_frame.join(first_purchase.rename("first_purchase"))
@@ -621,11 +691,11 @@ score(cohort_frame.loc[~is_train, "churned"], cohort_prob, label="tautology, coh
 
 # %% [markdown]
 # Same identity, same near-1.000 score, under a split with no row-level
-# leakage at all. `assert_no_dominant_single_feature` is what should have
-# caught this before any model was trained — this is what it reports when
-# pointed at the tautological frame:
+# leakage at all. `assert_no_dominant_single_feature` should have caught this
+# before any model was trained. This is what it reports when pointed at the
+# tautological frame:
 
-# %%
+# %% jupyter={"source_hidden": true}
 try:
     assert_no_dominant_single_feature(X_taut, y_taut, threshold=0.99)
 except ValueError as exc:
@@ -636,24 +706,21 @@ except ValueError as exc:
 # ## Leakage audit
 #
 # Run against the main panel (features, split, and label construction) and
-# the tautological closing section, following the project's `leakage-audit`
-# skill, then independently re-checked by the project's `validation-reviewer`
-# agent. One of the reviewer's findings changed what's below: an earlier
-# draft of this section asserted several numbers (an adversarial-validation
-# AUC, a label-shuffle AUC, a temporal-split-sensitivity AUC) that no code
-# cell in this notebook actually produced — a violation of this project's own
-# "no results hardcoded into prose" rule. Rather than add three more model
-# fits to backfill numbers that belong to `02_leakage_diagnosis` anyway (its
-# stated job, per `docs/timeline.md`, is exactly "adversarial-validation AUC;
-# ablation results"), those checks are named below without specific figures,
-# and left for that notebook to do properly. Everything with a number below
-# is computed in this notebook.
+# the tautological closing section, following `docs/standards/validation.md`.
+# Every number cited below is computed in a visible cell of this notebook.
+# The adversarial-validation and label-shuffle checks are deliberately left to
+# `02_leakage_diagnosis`, whose job they are.
 #
-# The reviewer also caught a real second issue: the causal story originally
-# told for the "overlapping label windows" finding was wrong. The cell below
-# corrects it.
+# One item needs its own cell first. Rows for the same customer at different
+# origins are not independent, and there are two reasons, not one. Adjacent
+# origins have overlapping label windows (a 90-day window, a 30-day step), so
+# the same purchase can decide two labels. Separately, some customers are
+# durably loyal and others durably lapsed, so a customer's label agrees with
+# itself across origins even when the windows do not overlap at all. The cell
+# below separates the two by measuring same-customer label agreement as a
+# function of how far apart the origins are.
 
-# %%
+# %% jupyter={"source_hidden": true}
 pivot = panel.pivot_table(index="customer_id", columns="as_of", values="churned")
 origins_sorted = sorted(pivot.columns)
 p_churn = y.mean()
@@ -680,73 +747,48 @@ pd.DataFrame(overlap_rows)
 # %% [markdown]
 # Agreement falls as the window overlap shrinks, but even at zero overlap
 # (origins a full `HORIZON_DAYS` apart) it stays well above the independence
-# baseline. Most of the excess is not the overlapping-window artifact — it's
-# that some customers are durably loyal and others durably lapsed, so the
-# same customer's label tends to agree with itself across origins regardless
-# of window overlap. The overlap adds a smaller, real effect on top of that.
+# baseline. Most of the excess is persistence in churn propensity, not the
+# overlapping-window artefact. The overlap adds a smaller, real effect on
+# top.
 #
 # | # | Component | Leak class | Evidence | Severity | Fix |
 # |---|---|---|---|---|---|
-# | 1 | `naive_features` (recency/frequency/monetary) | Feature-time leakage — full-history aggregation ignores `as_of`, and includes the very transaction that determines the label | The purchase that makes a row `churned=0` is itself counted into that customer's `frequency`/`monetary` and lowers `recency_days`, at *every* origin that customer appears in, not only the one the purchase falls inside. Single-feature AUCs 0.82-0.86 (computed above); the drop-one ablation above shows no single feature is "the whole leak" — even removing the strongest one (`recency_days`) only brings AUC down to ~0.87, well above chance, not down to it | High (intentional — mistake #1) | Compute features from transactions strictly before each row's own `as_of` (`03_temporal_protocol`) |
-# | 2 | Row-level random split | Split leakage — entity overlap across train/test at different `as_of` | Customer-overlap chart above | High (intentional — mistake #2) | Group the split by `customer_id` (e.g. `GroupShuffleSplit`), or evaluate per-origin |
-# | 3 | `GAP_DAYS = 0` | Split leakage — no operational lead time; `feature_end == label_start` | Passed explicitly to `rolling_origins`, vs. `config.DEFAULT_GAP_DAYS = 7` used elsewhere | Medium (intentional — mistake #3; secondary here since mistake #1 already reads future data regardless of gap) | Use `DEFAULT_GAP_DAYS` in `03_temporal_protocol` |
-# | 4 | Same-customer label agreement across origins | **Not previously flagged**, and corrected once during review — see the cell above | Agreement is highest at maximum window overlap and falls as overlap shrinks, but stays well above the independence baseline even at zero overlap — mostly ordinary churn-propensity persistence, not the window-overlap artifact alone | Medium — compounds mistake #2: rows for the same customer are not independent draws, for two separate reasons, not one | A correct rolling-origin backtest needs cluster-robust variance (e.g. block bootstrap by `customer_id`) regardless of `step_days` — spacing origins further apart removes only the smaller, overlap-driven component |
-# | 5 | Eligibility rule (`>=1` purchase in 365d before `as_of`) | Checked — **clean** | `eligible_customers` filters strictly `< as_of`, matching the feature-window convention in `churnval.windows`; it does not itself look forward | n/a | n/a — see [ADR-0007](../docs/adr/0007-online-retail-ii-naive-panel-definition.md) for the `>=1` vs. `>=2` purchase question, which is a modelling choice, not a leak |
-# | 6 | Label maturity / open-window censoring | Checked — **clean** | `rolling_origins` excludes any origin whose label window would extend past the dataset's last event, so no origin's label is truncated and no censored customer is silently coded as a non-churner | n/a | n/a |
-# | 7 | Results file vs. tautological section | Checked — **clean** | `reports/results_naive.json` is written before the tautological section begins; nothing after that point writes to any file, so the perfect score below cannot contaminate the reported number | n/a | n/a |
-# | 8 | `io.py` administrative stock codes (`POST`, `M`, `BANK CHARGES`, …) | **Found during review, fixed** | 25 customers had their entire purchase history built from postage/manual/bank-charge/test line items, not real purchases, before `_clean` excluded them — see `docs/data/online_retail_ii.md` | Medium (data-quality, not this notebook's intentional leak) | Fixed in `churnval.io.EXCLUDED_STOCK_CODES`; regression-tested in `tests/test_io.py` |
+# | 1 | `naive_features` (recency/frequency/monetary) | Feature-time leakage: full-history aggregation ignores `as_of` and includes the very transaction that determines the label | The purchase that makes a row `churned=0` is counted into that customer's `frequency` and `monetary` and lowers `recency_days`, at *every* origin the customer appears in, not only the origin the purchase falls inside. Single-feature AUCs of 0.82-0.86 (computed above). The drop-one ablation shows no single feature is the whole leak: removing the strongest (`recency_days`) only brings AUC down to about 0.87 | High (intentional, mistake #1) | Compute features from transactions strictly before each row's own `as_of` (`03_temporal_protocol`) |
+# | 2 | Row-level random split | Split leakage: entity overlap across train and test at different `as_of` | Customer-overlap chart above | High (intentional, mistake #2) | Group the split by `customer_id` (e.g. `GroupShuffleSplit`), or evaluate per origin |
+# | 3 | `GAP_DAYS = 0` | Split leakage: no operational lead time; `feature_end == label_start` | Passed explicitly to `rolling_origins`; `config.DEFAULT_GAP_DAYS = 7` is used elsewhere | Medium (intentional, mistake #3; secondary here because mistake #1 already reads future data regardless of gap) | Use `DEFAULT_GAP_DAYS` in `03_temporal_protocol` |
+# | 4 | Same-customer label agreement across origins | Rows for one customer are not independent draws, for two separate reasons (see the cell above) | Agreement is highest at maximum window overlap and falls as overlap shrinks, but stays well above the independence baseline even at zero overlap | Medium; compounds mistake #2 | A rolling-origin backtest needs cluster-aware uncertainty (e.g. a block bootstrap by `customer_id`) regardless of `step_days`; spacing origins further apart removes only the overlap component |
+# | 5 | Eligibility rule (at least one purchase in the 365 days before `as_of`) | Clean | `eligible_customers` filters strictly `< as_of`, matching the feature-window convention in `churnval.windows`; it does not look forward | n/a | See [ADR-0007](../docs/adr/0007-online-retail-ii-naive-panel-definition.md) for the one-purchase vs. two-purchase question, which is a modelling choice rather than a leak |
+# | 6 | Label maturity / open-window censoring | Clean | `rolling_origins` excludes any origin whose label window would extend past the dataset's last event, so no label is truncated and no censored customer is silently coded as a non-churner | n/a | n/a |
+# | 7 | Results file vs. tautological section | Clean | `reports/results_naive.json` is written before the tautological section begins; nothing after that point writes to any file | n/a | n/a |
+# | 8 | `io.py` administrative stock codes (`POST`, `M`, `BANK CHARGES`, and so on) | Found during this notebook's review and fixed | 25 customers had their entire purchase history built from postage, manual-adjustment, bank-charge or test line items rather than real purchases, before `_clean` excluded them (see `docs/data/online_retail_ii.md`) | Medium, a data-quality issue rather than one of this notebook's intentional leaks | Fixed in `churnval.io.EXCLUDED_STOCK_CODES`; regression-tested in `tests/test_io.py` |
 #
-# **Checked, not added as numbered rows because they don't yet have a code
-# cell here** — adversarial validation (train rows vs. test rows) and a
-# label-shuffle-within-`as_of` test were both explored manually while
-# auditing this notebook. Both are legitimate diagnostics, but they are
-# `02_leakage_diagnosis`'s stated deliverables, not this notebook's — adding
-# ad hoc versions here to report a number would mean either duplicating that
-# notebook's work or hardcoding a number no cell produced, which is exactly
-# the mistake this section's introduction above was rewritten to stop doing.
-#
-# **Answering the three questions this audit was asked to settle:**
-#
-# - **Is there a fourth, unintentional leak?** Yes — row 4, though the
-#   mechanism is not quite "overlapping windows" as first claimed; see the
-#   correction above.
-# - **Does the eligibility rule leak?** No — row 5, clean by construction.
-# - **Does reusing `SEED` across this notebook's three model fits matter?**
-#   No. The seed only controls internal split-shuffling and tree randomness
-#   *within* each independently-fit model — no state crosses between fits,
-#   consistent with the project standard of one seed constant used everywhere
-#   (`config.SEED`). For the tautological section specifically, the direct
-#   `single_feature_auc` identity check (computed above) already shows the
-#   ≈1.000 score is a deterministic consequence of
-#   `churned == (recency_days > HORIZON_DAYS)`, not a favourable draw — it
-#   would reproduce under any seed.
+# On reusing one `SEED` across this notebook's model fits: the seed only
+# controls shuffling and tree randomness *within* each independently fitted
+# model, so no state crosses between fits. The tautological section's score
+# is an identity, not a favourable draw, and would reproduce under any seed.
 
 # %% [markdown]
 # ---
 # ## Closing
 #
-# **Finding:** built faithfully, the conventional approach reports ROC AUC ≈
-# 0.90 (see `reports/results_naive.json` for the full, current bundle). That
-# number is not a legitimate estimate of anything — it comes from features
-# that read future transactions regardless of `as_of`, a split that lets the
-# same customer teach and test the model at different points in time, and no
-# gap between scoring and the outcome window. None of the three is subtle on
-# its own; a fourth, non-obvious effect compounds the second — rows for the
-# same customer are not independent draws for two separate reasons, not one,
-# as the leakage audit above shows.
+# **Finding:** built faithfully, the conventional approach reports ROC AUC of
+# about 0.90 (`reports/results_naive.json` has the full bundle). That number
+# is not a legitimate estimate of anything. It comes from features that read
+# future transactions regardless of `as_of`, a split that lets the same
+# customer teach and test the model at different points in time, and no gap
+# between scoring and the outcome window. A fourth, less obvious effect
+# compounds the second: rows for the same customer are correlated for two
+# separate reasons, as the audit above shows.
 #
-# The closing section went further and built a version that scores a literal
-# 1.000, on purpose, to make a narrower point survive on its own: a perfect
-# offline score is a bug report, not a result, and a temporal split does not
-# by itself rule that out — the feature and the label have to be checked for
-# being the same fact wearing two names.
+# The closing section built a version that scores a literal 1.000 to make a
+# narrower point stand on its own: a perfect offline score is a bug report,
+# not a result, and a temporal split does not rule it out by itself. The
+# feature and the label have to be checked for being the same fact under two
+# names.
 #
-# **Next:** `02_leakage_diagnosis` takes the ≈0.90 number apart properly —
-# the adversarial-validation and ablation diagnostics this notebook
-# deliberately left out, built as reusable tools rather than one-off checks,
-# plus the leakage table its own opening question asks for. `03_temporal_protocol`
-# then rebuilds the panel the honest way: features computed strictly before
-# each row's own `as_of`, a split grouped by `customer_id`, and
-# `config.DEFAULT_GAP_DAYS` instead of zero — so that `04_the_gap` can report,
-# for the first time in this repo, an actual measurement of how much the
-# number on this page was lying.
+# **Next:** `02_leakage_diagnosis` takes the 0.90 apart with reusable tools:
+# adversarial validation, ablation, and the leakage table its opening
+# question asks for. `03_temporal_protocol` then rebuilds the panel the
+# honest way, with features computed strictly before each row's own `as_of`,
+# a real gap, and a rolling-origin backtest, so that `04_the_gap` can report
+# how much the number on this page was lying.

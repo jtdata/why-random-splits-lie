@@ -1,0 +1,29 @@
+{
+  "uncalibrated":{
+    "brier_brier_raw":0.2195502225,
+    "brier_reliability":0.0187558733,
+    "brier_resolution":0.0480523173,
+    "brier_uncertainty":0.2499993445,
+    "brier_brier_binned":0.2207029005,
+    "n_targeted":2688,
+    "expected_value":528.0
+  },
+  "Platt":{
+    "brier_brier_raw":0.2050854072,
+    "brier_reliability":0.0040839632,
+    "brier_resolution":0.0480999972,
+    "brier_uncertainty":0.2499993445,
+    "brier_brier_binned":0.2059833105,
+    "n_targeted":2351,
+    "expected_value":885.0
+  },
+  "isotonic":{
+    "brier_brier_raw":0.2052026549,
+    "brier_reliability":0.0042437266,
+    "brier_resolution":0.0482068374,
+    "brier_uncertainty":0.2499993445,
+    "brier_brier_binned":0.2060362337,
+    "n_targeted":1989,
+    "expected_value":1143.0
+  }
+}
