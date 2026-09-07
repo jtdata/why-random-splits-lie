@@ -6,7 +6,7 @@
 
 ## Context
 
-This repository is a portfolio artefact. Its audience is a technical reviewer
+This repository is a portfolio artifact. Its audience is a technical reviewer
 deciding whether the author exercises judgement, not only whether the code
 runs. Judgement is invisible in a finished codebase: the reader sees what was
 chosen and never sees what was rejected or why.
@@ -40,4 +40,4 @@ visible trail.
 would dilute the log.
 
 **Revisit if:** the log exceeds roughly 25 records for a single project, at
-which point it needs categorising rather than abandoning.
+which point it needs categorizing rather than abandoning.
