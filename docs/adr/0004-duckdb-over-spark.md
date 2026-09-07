@@ -15,7 +15,7 @@ project must run entirely locally.
 ## Decision
 
 Store everything as Parquet and query it with DuckDB. Use SQL for set-based
-work — as-of joins, windowed aggregations, label construction — and pandas only
+work (as-of joins, windowed aggregations, label construction) and pandas only
 for row-wise logic that SQL would obscure.
 
 ## Alternatives considered
