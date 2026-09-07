@@ -8,7 +8,7 @@
 
 This project's entire argument depends on comparing a random split against a
 temporal split. That comparison requires panel data with **real event
-timestamps**, a time axis to split on, features that can be snapshotted as-of
+timestamps**, a time axis to split on, features that can be snapshot as-of
 a date, and labels with a definable window.
 
 The two datasets most commonly reached for in churn tutorials do not have this
@@ -28,7 +28,7 @@ Prediction for this project.
 
 | Option | Why it was plausible | Why it was rejected |
 |---|---|---|
-| IBM Telco churn | The default churn dataset; familiar to every reviewer; small and fast | A single cross-sectional snapshot — a tenure column and a binary label, no event dates. There is no time axis to split on. Manufacturing one would be obvious to any reviewer who knows the file, and would invalidate the whole demonstration |
+| IBM Telco churn | The default churn dataset; familiar to every reviewer; small and fast | A single cross-sectional snapshot: a tenure column and a binary label, no event dates. There is no time axis to split on. Manufacturing one would be obvious to any reviewer who knows the file, and would invalidate the whole demonstration |
 | Santander Customer Transaction Prediction | Large, well known, clean | Fully anonymized with no temporal structure at all |
 | Santander Product Recommendation | Genuine monthly customer×product panel with `fecha_dato` | Viable, and kept as a fallback. Label must be constructed from product drops, adding a definitional argument that distracts from the main one |
 | Olist e-commerce | Fully timestamped, small, fast to iterate on | Marketplace repeat-purchase framing rather than churn; kept as a prototyping set |
