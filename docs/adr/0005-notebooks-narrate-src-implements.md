@@ -12,14 +12,14 @@ needs: reviewable diffs, unit tests around split and as-of logic, and CI that
 proves the whole thing still runs.
 
 The correctness of this project depends almost entirely on code that is easy to
-get subtly wrong and impossible to eyeball — as-of feature computation, gap
+get subtly wrong and impossible to eyeball: as-of feature computation, gap
 enforcement, label windows. That code must be tested.
 
 ## Decision
 
 Notebooks orchestrate and narrate; all logic lives in `src/churnval/` and is
 imported. The package is installed in editable mode, so notebooks import it the
-way a user would — no `sys.path` manipulation.
+way a user would, no `sys.path` manipulation.
 
 Every notebook is paired with a `.py:percent` file via jupytext, and diffs are
 reviewed on the `.py`. `nbstripout` runs as a git filter so outputs never enter
