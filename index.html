@@ -107,6 +107,10 @@ the KKBox replication plus the portable checklist (<code>07</code>). Every numbe
 below is copied from a <code>reports/results_*.json</code> file that a notebook in
 this repo wrote; none is estimated or recalled.</p>
 </blockquote>
+<p><strong><a href="https://jtdata.github.io/why-random-splits-lie/">Read the notebooks as a report, with every chart and table shown</a></strong>, or read the source in
+<code>notebooks/</code>. The published pages are the executed notebooks: same code, same
+prose, plus the outputs GitHub cannot show because this repo strips them from
+version control.</p>
 <h2>The claim</h2>
 <p>Take a churn dataset with real event timestamps. Build a model the way most
 tutorials do: random train/test split, features computed over the full
@@ -186,16 +190,18 @@ different eligibility rule, feature set and label (<code>notebooks/07_generalisa
   <td>Corrected (as-of features, gap, rolling origin)</td>
   <td>0.907</td>
   <td>0.909</td>
-  <td>0.123</td>
+  <td>0.122</td>
 </tr>
 </tbody>
 </table>
 <blockquote>
-<p>KKBox's figures move by up to ~0.001 between runs on identical inputs,
-while the Online Retail II figures above reproduce exactly. See
-<code>notebooks/07_generalisation.py</code>'s leakage audit, row 11.</p>
+<p>The KKBox figures are a snapshot of one local run. They move by up to
+~0.001 between runs on identical inputs, where the Online Retail II
+figures above reproduce exactly. Read them as sizes, not exact values, and
+see <code>notebooks/07_generalisation.py</code>'s leakage audit, row 11, for the
+cause. The published notebooks are rendered from this same run.</p>
 </blockquote>
-<p>The gap is real but far smaller: 0.027 against Online Retail II's 0.138.
+<p>The gap is real but far smaller: 0.026 against Online Retail II's 0.138.
 The reason is measured rather than assumed. KKBox's corrected model already
 scores 0.907, close to what a metric bounded at 1.0 allows, because
 <code>days_until_expiry</code> is nearly a structural readout of the label so there
