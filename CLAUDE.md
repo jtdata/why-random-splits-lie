@@ -48,7 +48,15 @@ uv run ruff check --fix .    # lint
 uv run ruff format .         # format
 uv run jupytext --sync notebooks/*.ipynb
 .\make.ps1 nb                # execute all notebooks in order into reports/
+.\make.ps1 site              # render the executed notebooks to reports/_site
+.\make.ps1 publish           # push reports/_site to the gh-pages branch
 ```
+
+The published site is https://jtdata.github.io/why-random-splits-lie/. It is
+built locally, never in CI: the notebooks cannot run without `data/`, which is
+gitignored by design, and `07` needs Kaggle credentials plus about half an
+hour. So `nb`, then `site`, then `publish`, in that order, and only when the
+outputs are worth republishing.
 
 ## Working notes for Claude
 

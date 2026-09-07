@@ -9,6 +9,11 @@ overstates their real performance, and a worked protocol for doing it properly.
 > below is copied from a `reports/results_*.json` file that a notebook in
 > this repo wrote; none is estimated or recalled.
 
+**[Read the notebooks as a report, with every chart and table shown](https://jtdata.github.io/why-random-splits-lie/)**, or read the source in
+`notebooks/`. The published pages are the executed notebooks: same code, same
+prose, plus the outputs GitHub cannot show because this repo strips them from
+version control.
+
 ## The claim
 
 Take a churn dataset with real event timestamps. Build a model the way most
@@ -55,13 +60,15 @@ different eligibility rule, feature set and label (`notebooks/07_generalisation.
 | KKBox evaluation | ROC AUC | PR AUC | Brier |
 |---|---|---|---|
 | Naive (full-history features, random split) | 0.934 | 0.939 | 0.102 |
-| Corrected (as-of features, gap, rolling origin) | 0.907 | 0.909 | 0.123 |
+| Corrected (as-of features, gap, rolling origin) | 0.907 | 0.909 | 0.122 |
 
-> KKBox's figures move by up to ~0.001 between runs on identical inputs,
-> while the Online Retail II figures above reproduce exactly. See
-> `notebooks/07_generalisation.py`'s leakage audit, row 11.
+> The KKBox figures are a snapshot of one local run. They move by up to
+> ~0.001 between runs on identical inputs, where the Online Retail II
+> figures above reproduce exactly. Read them as sizes, not exact values, and
+> see `notebooks/07_generalisation.py`'s leakage audit, row 11, for the
+> cause. The published notebooks are rendered from this same run.
 
-The gap is real but far smaller: 0.027 against Online Retail II's 0.138.
+The gap is real but far smaller: 0.026 against Online Retail II's 0.138.
 The reason is measured rather than assumed. KKBox's corrected model already
 scores 0.907, close to what a metric bounded at 1.0 allows, because
 `days_until_expiry` is nearly a structural readout of the label so there
