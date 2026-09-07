@@ -10,15 +10,15 @@
 survival problem: instead of one binary outcome per customer per origin, a
 customer's follow-up is split into periods, and the model estimates a
 hazard (probability of returning) for each period, conditional on having
-not returned yet. This needs a period width — how many days wide each
-discretization step is — chosen before any of `churnval.hazard`'s
+not returned yet. This needs a period width (how many days wide each
+discretization step is) chosen before any of `churnval.hazard`'s
 functions could be written, since it fixes the shape of the person-period
 expansion (`build_person_period_panel`) and the size of the training data
 the hazard model sees at every origin.
 
 The horizon is fixed at 90 days (ADR-0007, dataset-specific). A period
-width has to divide it evenly — `build_person_period_panel` and
-`first_event_period` both assert this — and trades off two things directly
+width has to divide it evenly (`build_person_period_panel` and
+`first_event_period` both assert this) and trades off two things directly
 against each other: a narrower period gives finer temporal resolution
 (more granular "when") at the cost of a larger person-period expansion (a
 7-day period would produce roughly 13 periods and a person-period panel
@@ -27,15 +27,15 @@ coarser resolution with a smaller, cheaper expansion.
 
 ## Decision
 
-Periods are 30 days wide — 3 periods per 90-day horizon
+Periods are 30 days wide: 3 periods per 90-day horizon
 (`churnval.hazard.PERIOD_DAYS = 30`). This matches
 `config.DEFAULT_STEP_DAYS`, the spacing this project already uses between
 rolling-origin scoring occasions, and the monthly-ish cadence ADR-0007
 already established as the right granularity for this dataset's
 non-contractual, largely-wholesale purchase pattern. The three features
 this project uses (`recency_days`, `frequency`, `monetary`) carry no
-information at a finer time resolution than that — they are RFM
-aggregates, not event-sequence features — so a narrower period would
+information at a finer time resolution than that (they are RFM
+aggregates, not event-sequence features) so a narrower period would
 multiply the row count and training cost without giving the model
 anything sharper to learn from.
 
