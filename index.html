@@ -4,114 +4,121 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Why random splits lie about churn</title>
+<meta name="description" content="A controlled demonstration that a random split overstates churn-model ROC AUC by 0.138, and a worked temporal-validation protocol that measures the honest number.">
+<meta name="author" content="JT Moeller">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Why random splits lie about churn">
+<meta property="og:description" content="A controlled demonstration that a random split overstates churn-model ROC AUC by 0.138, and a worked temporal-validation protocol that measures the honest number.">
+<meta property="og:url" content="https://jtdata.github.io/why-random-splits-lie/">
+<meta property="og:image" content="https://jtdata.github.io/why-random-splits-lie/assets/the_gap.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141D26'/%3E%3Crect x='6' y='8' width='8' height='18' fill='%23D6349C'/%3E%3Crect x='18' y='14' width='8' height='12' fill='%23D98E04'/%3E%3C/svg%3E">
 
-<style>
-:root { --side: 280px; --ink: #141D26; --muted: #5A6472; --rule: #E3E7EC;
-        --accent: #1F6FEB; --bg: #FFFFFF; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); }
-#site-nav {
-  position: fixed; top: 0; left: 0; bottom: 0; width: var(--side);
-  overflow-y: auto; border-right: 1px solid var(--rule); padding: 22px 18px;
-  box-sizing: border-box; font: 14px/1.5 -apple-system, BlinkMacSystemFont,
-  "Segoe UI", Helvetica, Arial, sans-serif; background: #FBFCFD;
-}
-#site-nav .brand { font-weight: 700; color: var(--ink); text-decoration: none;
-  display: block; font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
-#site-nav .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 18px; }
-#site-nav ol { list-style: none; padding: 0; margin: 0 0 18px 0; counter-reset: n; }
-#site-nav li { margin: 0 0 2px 0; }
-#site-nav a.item { display: block; padding: 6px 9px; border-radius: 5px;
-  color: var(--ink); text-decoration: none; }
-#site-nav a.item:hover { background: #EEF2F7; }
-#site-nav a.item.active { background: var(--accent); color: #fff; font-weight: 600; }
-#site-nav .num { color: var(--muted); font-variant-numeric: tabular-nums;
-  margin-right: 8px; font-size: 12.5px; }
-#site-nav a.item.active .num { color: #D7E6FF; }
-#site-nav .grouplabel { text-transform: uppercase; letter-spacing: .07em;
-  font-size: 11px; color: var(--muted); margin: 16px 0 7px 9px; font-weight: 600; }
-#site-nav .repo { border-top: 1px solid var(--rule); padding-top: 14px;
-  font-size: 12.5px; }
-#site-nav .repo a { color: var(--accent); text-decoration: none; }
-#site-main { margin-left: var(--side); }
-#site-main .jp-Notebook, #site-main .md-page { max-width: 900px; margin: 0 auto;
-  padding: 34px 40px 10px 40px; }
-#pager { max-width: 900px; margin: 0 auto; padding: 26px 40px 70px 40px;
-  display: flex; justify-content: space-between; gap: 18px;
-  border-top: 1px solid var(--rule);
-  font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
-#pager a { color: var(--accent); text-decoration: none; max-width: 46%; }
-#pager .lbl { display: block; color: var(--muted); font-size: 12px; }
-/* Soften the In[ ]/Out[ ] gutter so prose leads and code supports. */
-.jp-InputPrompt, .jp-OutputPrompt { opacity: .34; font-size: 11px; }
-.jp-RenderedMarkdown { font-size: 15.5px; line-height: 1.62; color: var(--ink); }
-.jp-RenderedMarkdown h1 { font-size: 30px; margin: 6px 0 14px; line-height: 1.2; }
-.jp-RenderedMarkdown h2 { font-size: 21px; margin-top: 34px;
-  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
-.jp-RenderedMarkdown h3 { font-size: 17px; margin-top: 26px; }
-.jp-RenderedMarkdown table { font-size: 13px; }
-.jp-RenderedMarkdown blockquote { border-left: 3px solid var(--accent);
-  background: #F5F8FD; margin-left: 0; padding: 10px 16px; }
-.md-page { font: 15.5px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI",
-  Helvetica, Arial, sans-serif; color: var(--ink); }
-.md-page h1 { font-size: 31px; line-height: 1.2; }
-.md-page h2 { font-size: 21px; margin-top: 34px;
-  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
-.md-page table { border-collapse: collapse; font-size: 14px; margin: 16px 0; }
-.md-page th, .md-page td { border: 1px solid var(--rule); padding: 6px 11px;
-  text-align: left; vertical-align: top; }
-.md-page th { background: #F4F7FA; }
-.md-page code { background: #F2F4F7; padding: 1px 5px; border-radius: 3px;
-  font-size: 13.5px; }
-.md-page pre { background: #F7F9FB; border: 1px solid var(--rule);
-  padding: 13px 15px; border-radius: 6px; overflow-x: auto; }
-.md-page pre code { background: none; padding: 0; }
-.md-page blockquote { border-left: 3px solid var(--accent); background: #F5F8FD;
-  margin-left: 0; padding: 10px 16px; }
-.md-page img { max-width: 100%; }
-@media (max-width: 950px) {
-  #site-nav { position: static; width: auto; height: auto; border-right: none;
-              border-bottom: 1px solid var(--rule); }
-  #site-main { margin-left: 0; }
-  #site-main .jp-Notebook, #site-main .md-page, #pager { padding: 22px 18px; }
-}
-</style>
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
-<nav id="site-nav">
-  <a class="brand" href="index.html">Why random splits lie about churn</a>
-  <div class="sub">A worked temporal-validation protocol, with every number
-  computed by the notebook it appears in.</div>
-  <ol><li><a class="item active" href="index.html">Overview</a></li></ol>
-  <div class="grouplabel">The argument, in order</div>
-  <ol><li><a class="item" href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li>
-<li><a class="item" href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li>
-<li><a class="item" href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li>
-<li><a class="item" href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li>
-<li><a class="item" href="04_the_gap.html"><span class="num">04</span>The gap</a></li>
-<li><a class="item" href="05_calibration.html"><span class="num">05</span>Calibration</a></li>
-<li><a class="item" href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li>
-<li><a class="item" href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol>
-  <div class="grouplabel">Takeaway</div>
-  <ol><li><a class="item" href="checklist.html">The portable checklist</a></li></ol>
-  <div class="repo"><a href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a></div>
+<nav id="site-nav" aria-label="Site">
+  <input type="checkbox" id="nav-toggle" class="vh">
+  <div class="navhead">
+    <a class="brand" href="index.html">Why random splits lie about churn</a>
+    <label for="nav-toggle" class="btn menu-btn">Menu</label>
+  </div>
+  <div class="navbody">
+    <div class="sub">A temporal-validation case study. Every number is computed by
+    the notebook it appears in.</div>
+    <ol><li><a class="item active" href="index.html">Summary and headline results</a></li></ol>
+    <div class="chapter"><span class="k">Chapter 1</span><span class="t">The illusion</span></div><ol><li><a class="item" href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li><li><a class="item" href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li><li><a class="item" href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li></ol><div class="chapter"><span class="k">Chapter 2</span><span class="t">The protocol</span></div><ol><li><a class="item" href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li><li><a class="item" href="04_the_gap.html"><span class="num">04</span>The gap</a></li></ol><div class="chapter"><span class="k">Chapter 3</span><span class="t">Decision economics</span></div><ol><li><a class="item" href="05_calibration.html"><span class="num">05</span>Calibration</a></li><li><a class="item" href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li></ol><div class="chapter"><span class="k">Chapter 4</span><span class="t">Generalisation</span></div><ol><li><a class="item" href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol>
+    <div class="grouplabel">Reusable artifacts</div>
+    <ol><li><a class="item" href="checklist.html">The validation checklist</a></li><li><a class="item" href="decisions.html">Decision records (ADRs)</a></li>
+      <li><a class="item" href="index.html#reproducing">Reproduce it</a></li>
+      <li><a class="item" href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a></li>
+    </ol>
+    <div class="author-card">
+      <span class="name">JT Moeller</span>
+      <span class="role">Data scientist</span>
+      <p>Model validation, leakage auditing and decision-focused evaluation. Built to be reproduced, not skimmed.</p>
+      <div class="links"><a href="https://github.com/jtdata">GitHub</a></div>
+    </div>
+  </div>
 </nav>
 <div id="site-main">
-<div class="md-page"><h1>Why random splits lie about churn</h1>
-<p>A controlled demonstration that the standard offline evaluation of churn models
-overstates their real performance, and a worked protocol for doing it properly.</p>
-<blockquote>
-<p><strong>Status:</strong> the notebook sequence is complete: the headline gap (<code>04</code>)
-on Online Retail II, calibration (<code>05</code>), the hazard framing (<code>06</code>), and
-the KKBox replication plus the portable checklist (<code>07</code>). Every number
-below is copied from a <code>reports/results_*.json</code> file that a notebook in
-this repo wrote; none is estimated or recalled.</p>
-</blockquote>
-<p><strong><a href="https://jtdata.github.io/why-random-splits-lie/">Read the notebooks as a report, with every chart and table shown</a></strong>, or read the source in
-<code>notebooks/</code>. The published pages are the executed notebooks: same code, same
-prose, plus the outputs GitHub cannot show because this repo strips them from
-version control.</p>
-<h2>The claim</h2>
+<div class="landing">
+<header class="hero">
+  <span class="badge">Model validation case study</span>
+  <h1>Why random splits lie about churn</h1>
+  <p class="lead">A controlled demonstration that the standard offline evaluation of a churn
+  model overstates ROC AUC by <strong>0.138</strong> through silent temporal
+  leakage, a worked protocol that measures the honest number, and a replication on a second,
+  larger dataset.</p>
+  <div class="cta">
+    <a class="btn primary" href="00_problem_definition.html">Read the case study</a>
+    <a class="btn" href="checklist.html">The 11-point checklist</a>
+    <a class="btn" href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a>
+  </div>
+</header>
+<div class="stat-grid"><div class="stat-card"><span class="stat-num"><span class="naive">0.903</span><span class="arrow">&rarr;</span><span class="honest">0.765</span></span><span class="stat-label">ROC AUC, random split vs. honest backtest. The same data and model family: 0.138 of the first number was never real.</span></div><div class="stat-card"><span class="stat-num">+56%</span><span class="stat-label">Brier score error, relative to what the random split reported. The inflation is not confined to ranking metrics.</span></div><div class="stat-card"><span class="stat-num"><span class="naive">0.934</span><span class="arrow">&rarr;</span><span class="honest">0.907</span></span><span class="stat-label">Replicated on KKBox subscription churn. A smaller gap (0.026), and the notebooks measure why.</span></div><div class="stat-card"><span class="stat-num">11 checks</span><span class="stat-label">A portable validation checklist that reads on its own, for a churn dataset this repo has never seen.</span></div></div>
+<p class="stat-src">Every figure above is read at build time from a
+<code>reports/results_*.json</code> file that a notebook wrote. None is typed in.</p>
+<figure>
+  <img src="assets/the_gap.png" alt="Bar charts comparing ROC AUC, PR AUC and Brier score
+  under a random split, a temporal split with no gap, and a temporal split with a gap and a
+  rolling origin.">
+  <figcaption>The headline comparison, from
+  <a href="04_the_gap.html">notebook 04</a>. Same dataset, same model family. Only the
+  evaluation design changes.</figcaption>
+</figure>
+<figure>
+  <img src="assets/timeline.png" alt="Timeline of one scoring occasion: a feature window
+  ending at the as-of date, then a gap, then the label window.">
+  <figcaption>The whole protocol in one picture: features use data strictly before the as-of
+  date, a gap covers the time it takes to act, and only then does the label window open. A
+  random split ignores this timeline entirely. From
+  <a href="00_problem_definition.html">notebook 00</a>.</figcaption>
+</figure>
+
+<h2>The case study, in four chapters</h2>
+<p class="h2sub">Eight notebooks, grouped by the question they answer. Code is folded by
+default on every page, so the argument and the charts lead.</p>
+<div class="chapter-grid"><div class="chapter-card"><a class="thumb" href="00_problem_definition.html" tabindex="-1" aria-hidden="true"><img src="assets/random_split_illustration.png" alt="" loading="lazy"></a><div class="body"><span class="k">Chapter 1</span><h3>The illusion</h3><p class="s">Naive baseline and leakage</p><p>Pin down what is being predicted and over what windows. Then build the model the way most tutorials do, and take its number apart feature by feature with adversarial validation and ablation.</p><ol><li><a href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li><li><a href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li><li><a href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li></ol></div></div><div class="chapter-card"><a class="thumb" href="03_temporal_protocol.html" tabindex="-1" aria-hidden="true"><img src="assets/temporal_backtest_by_origin.png" alt="" loading="lazy"></a><div class="body"><span class="k">Chapter 2</span><h3>The protocol</h3><p class="s">Temporal splits and the gap</p><p>Rebuild it honestly: features computed strictly before each scoring date, an explicit gap, a rolling-origin backtest. Then measure the distance between the two numbers and ask whether the naive model could be served at all.</p><ol><li><a href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li><li><a href="04_the_gap.html"><span class="num">04</span>The gap</a></li></ol></div></div><div class="chapter-card"><a class="thumb" href="05_calibration.html" tabindex="-1" aria-hidden="true"><img src="assets/reliability_curves.png" alt="" loading="lazy"></a><div class="body"><span class="k">Chapter 3</span><h3>Decision economics</h3><p class="s">Calibration and time to event</p><p>A ranking metric does not say whether the probabilities can carry a retention decision. Calibrate on a later slice, derive the threshold from stated costs, and check what a hazard model adds once 'when' matters as well as 'whether'.</p><ol><li><a href="05_calibration.html"><span class="num">05</span>Calibration</a></li><li><a href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li></ol></div></div><div class="chapter-card"><a class="thumb" href="07_generalisation.html" tabindex="-1" aria-hidden="true"><img src="assets/kkbox_vs_retail_gap.png" alt="" loading="lazy"></a><div class="body"><span class="k">Chapter 4</span><h3>Generalisation</h3><p class="s">Replicating on KKBox</p><p>Run the same protocol on contractual subscription churn at a much larger scale. Report what replicated, what shrank, and the two things that did not transfer.</p><ol><li><a href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol></div></div></div>
+
+<h2>What this project demonstrates</h2>
+<p class="h2sub">The skills the work exercises, each linked to where it is done.</p>
+<ul class="cap-grid">
+<li><b>Leakage auditing</b>Point-in-time feature construction, adversarial validation and
+feature ablation to locate where a metric is borrowing from the future, including
+training/serving skew. Every modelling notebook carries a written leakage audit.
+<a href="02_leakage_diagnosis.html">Leakage diagnosis &rarr;</a></li>
+<li><b>Temporal evaluation design</b>Rolling-origin backtests with an explicit gap and a
+label-maturity purge, retraining cadence, and a common-origin comparison that isolates
+one cause at a time. <a href="03_temporal_protocol.html">Temporal protocol &rarr;</a></li>
+<li><b>Decision-focused evaluation</b>Platt and isotonic calibration fitted on a later
+slice, Brier decomposition, and an expected-value threshold derived from stated costs
+rather than chosen by looking at the outcome. <a href="05_calibration.html">Calibration &rarr;</a></li>
+<li><b>Time-to-event modelling</b>A discrete-time hazard model compared against the binary
+classifier, with censored customers handled as censored rather than silently labelled
+negative. <a href="06_hazard_framing.html">Hazard framing &rarr;</a></li>
+<li><b>Scientific honesty</b>The replication reports what did not transfer, and one ablation
+is flagged as narrower than it looks. A result that fails to port is written up, not dropped.
+<a href="07_generalisation.html">Generalisation &rarr;</a></li>
+<li><b>Engineering rigour</b>A tested <code>src</code> package (13 test
+modules), a locked <code>uv</code> environment, 16 decision records, and DuckDB
+for the larger panel. Notebooks narrate, the package implements.
+<a href="decisions.html">Decision records &rarr;</a></li>
+</ul>
+
+<h2>Reusable artifacts</h2>
+<p class="h2sub">The parts worth taking away even if you never run the code.</p>
+<div class="artifact-grid">
+<a class="artifact" href="checklist.html"><b>The 11-point checklist</b>
+<span>Each check names the failure it catches. Printable, and readable without the repo.</span></a>
+<a class="artifact" href="decisions.html"><b>Decision records</b>
+<span>16 ADRs: what was chosen, what it closed off, and why.</span></a>
+<a class="artifact" href="https://github.com/jtdata/why-random-splits-lie"><b>Source and reproduction</b>
+<span>Three commands rebuild the retail results from a clean clone.</span></a>
+</div>
+
+<h2 id="summary">The argument in full</h2>
+<div class="md-page"><h2 id="the-claim">The claim</h2>
 <p>Take a churn dataset with real event timestamps. Build a model the way most
 tutorials do: random train/test split, features computed over the full
 history. Report AUC. Then rebuild the same model with a temporal split, an
@@ -167,7 +174,7 @@ same trained model isn't obviously better than the correctly-trained one
 <a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0010-holdout-comparison-common-origin.md">ADR-0010</a>). A random
 split doesn't just report an inflated average, it reports a number for a
 model that has no honest feature set to be served with.</p>
-<h2>Does it replicate?</h2>
+<h2 id="does-it-replicate">Does it replicate?</h2>
 <p>Yes, on contractual subscription churn at about 25x the row count, with a
 different eligibility rule, feature set and label (<code>notebooks/07_generalisation.py</code>):</p>
 <table>
@@ -215,12 +222,12 @@ doesn't port: on contractual data, changing the gap changes which customers
 count as churners, so the two arms score differently-labelled panels
 (<code>07</code> measures this directly). No claim about gap contribution is made
 across both datasets.</p>
-<h2>Why it matters</h2>
+<h2 id="why-it-matters">Why it matters</h2>
 <p>A model selected on an inflated offline metric is selected on the wrong
 criterion. Worse, a <em>ranking</em> metric says nothing about whether the predicted
 probabilities are usable for a retention decision, so this repo also covers
 calibration and the expected-value threshold that follows from it.</p>
-<h2>Datasets</h2>
+<h2 id="datasets">Datasets</h2>
 <p>Two panels, chosen because they have real event timestamps:</p>
 <ul>
 <li><strong>KKBox WSDM Churn Challenge</strong>: contractual subscription churn, with
@@ -231,37 +238,53 @@ observed and has to be inferred.</li>
 <p>Showing the same failure in both settings is what makes this a method rather
 than a case study. See <a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0003-dataset-selection.md">ADR-0003</a> for why
 the popular Telco churn dataset cannot be used for this.</p>
-<h2>The portable version</h2>
+<h2 id="the-portable-version">The portable version</h2>
 <p><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/checklist.md"><code>docs/checklist.md</code></a> distils what the notebooks found
 into eleven checks you can run against a churn dataset this repo has never
 seen. It names the failure each check catches and what changes between a
 small dataset and a large one, and it reads on its own without the rest of
 the repo.</p>
-<h2>Reproducing</h2>
+<h2 id="reproducing">Reproducing</h2>
 <pre><code class="language-powershell">uv sync
 uv run churnval fetch retail
 .\make.ps1 nb
 </code></pre>
-<h2>Contents</h2>
+<h2 id="contents">Contents</h2>
 <ul>
 <li><code>notebooks/</code>: the argument, in order. Start at <code>00_problem_definition</code>.</li>
 <li><code>src/churnval/</code>: the implementation.</li>
 <li><code>docs/standards/</code>: the engineering and validation rules this repo follows.</li>
 <li><code>docs/adr/</code>: why things are the way they are.</li>
 </ul>
-<h2>Licence</h2>
+<h2 id="licence">Licence</h2>
 <p>MIT for the code. The datasets are covered by their own terms and are <strong>not</strong>
 redistributed here. The fetch script downloads them from source.</p>
-<h2>Read the notebooks</h2><ol><li><a href="00_problem_definition.html">00 Problem definition</a></li>
-<li><a href="01_naive_baseline.html">01 Naive baseline</a></li>
-<li><a href="02_leakage_diagnosis.html">02 Leakage diagnosis</a></li>
-<li><a href="03_temporal_protocol.html">03 Temporal protocol</a></li>
-<li><a href="04_the_gap.html">04 The gap</a></li>
-<li><a href="05_calibration.html">05 Calibration</a></li>
-<li><a href="06_hazard_framing.html">06 Hazard framing</a></li>
-<li><a href="07_generalisation.html">07 Generalisation</a></li>
-<li><a href="checklist.html">The portable checklist</a></li></ol></div>
+</div>
+
+<p class="byline">Built by <strong>JT Moeller</strong>, data scientist.
+<a href="https://github.com/jtdata">GitHub</a></p>
+</div>
 <div id="pager"><span></span><a href="00_problem_definition.html" style="text-align:right"><span class="lbl">Next</span>Problem definition</a></div>
 </div>
+<script>
+(function () {
+  var btn = document.getElementById('code-toggle');
+  if (!btn) return;
+  var folds = document.querySelectorAll('details.code-fold');
+  if (!folds.length) { btn.style.display = 'none'; return; }
+  function set(open) {
+    folds.forEach(function (d) { d.open = open; });
+    btn.textContent = open ? 'Hide all code' : 'Show all code';
+    btn.setAttribute('aria-pressed', open ? 'true' : 'false');
+    try { localStorage.setItem('showCode', open ? '1' : '0'); } catch (e) {}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('showCode'); } catch (e) {}
+  if (saved === '1') set(true);
+  btn.addEventListener('click', function () {
+    set(btn.getAttribute('aria-pressed') !== 'true');
+  });
+})();
+</script>
 </body>
 </html>

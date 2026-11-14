@@ -3,109 +3,65 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>06 Hazard framing | Why random splits lie about churn</title>
+<title>Hazard framing | Why random splits lie about churn</title>
+<meta name="description" content="Decision economics: Calibration and time to event. A controlled demonstration that a random split overstates churn-model ROC AUC by 0.138, and a worked temporal-validation protocol that measures the honest number.">
+<meta name="author" content="JT Moeller">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hazard framing | Why random splits lie about churn">
+<meta property="og:description" content="Decision economics: Calibration and time to event. A controlled demonstration that a random split overstates churn-model ROC AUC by 0.138, and a worked temporal-validation protocol that measures the honest number.">
+<meta property="og:url" content="https://jtdata.github.io/why-random-splits-lie/06_hazard_framing.html">
+<meta property="og:image" content="https://jtdata.github.io/why-random-splits-lie/assets/the_gap.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141D26'/%3E%3Crect x='6' y='8' width='8' height='18' fill='%23D6349C'/%3E%3Crect x='18' y='14' width='8' height='12' fill='%23D98E04'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="notebook.css">
-<style>
-:root { --side: 280px; --ink: #141D26; --muted: #5A6472; --rule: #E3E7EC;
-        --accent: #1F6FEB; --bg: #FFFFFF; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); }
-#site-nav {
-  position: fixed; top: 0; left: 0; bottom: 0; width: var(--side);
-  overflow-y: auto; border-right: 1px solid var(--rule); padding: 22px 18px;
-  box-sizing: border-box; font: 14px/1.5 -apple-system, BlinkMacSystemFont,
-  "Segoe UI", Helvetica, Arial, sans-serif; background: #FBFCFD;
-}
-#site-nav .brand { font-weight: 700; color: var(--ink); text-decoration: none;
-  display: block; font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
-#site-nav .sub { color: var(--muted); font-size: 12.5px; margin-bottom: 18px; }
-#site-nav ol { list-style: none; padding: 0; margin: 0 0 18px 0; counter-reset: n; }
-#site-nav li { margin: 0 0 2px 0; }
-#site-nav a.item { display: block; padding: 6px 9px; border-radius: 5px;
-  color: var(--ink); text-decoration: none; }
-#site-nav a.item:hover { background: #EEF2F7; }
-#site-nav a.item.active { background: var(--accent); color: #fff; font-weight: 600; }
-#site-nav .num { color: var(--muted); font-variant-numeric: tabular-nums;
-  margin-right: 8px; font-size: 12.5px; }
-#site-nav a.item.active .num { color: #D7E6FF; }
-#site-nav .grouplabel { text-transform: uppercase; letter-spacing: .07em;
-  font-size: 11px; color: var(--muted); margin: 16px 0 7px 9px; font-weight: 600; }
-#site-nav .repo { border-top: 1px solid var(--rule); padding-top: 14px;
-  font-size: 12.5px; }
-#site-nav .repo a { color: var(--accent); text-decoration: none; }
-#site-main { margin-left: var(--side); }
-#site-main .jp-Notebook, #site-main .md-page { max-width: 900px; margin: 0 auto;
-  padding: 34px 40px 10px 40px; }
-#pager { max-width: 900px; margin: 0 auto; padding: 26px 40px 70px 40px;
-  display: flex; justify-content: space-between; gap: 18px;
-  border-top: 1px solid var(--rule);
-  font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
-#pager a { color: var(--accent); text-decoration: none; max-width: 46%; }
-#pager .lbl { display: block; color: var(--muted); font-size: 12px; }
-/* Soften the In[ ]/Out[ ] gutter so prose leads and code supports. */
-.jp-InputPrompt, .jp-OutputPrompt { opacity: .34; font-size: 11px; }
-.jp-RenderedMarkdown { font-size: 15.5px; line-height: 1.62; color: var(--ink); }
-.jp-RenderedMarkdown h1 { font-size: 30px; margin: 6px 0 14px; line-height: 1.2; }
-.jp-RenderedMarkdown h2 { font-size: 21px; margin-top: 34px;
-  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
-.jp-RenderedMarkdown h3 { font-size: 17px; margin-top: 26px; }
-.jp-RenderedMarkdown table { font-size: 13px; }
-.jp-RenderedMarkdown blockquote { border-left: 3px solid var(--accent);
-  background: #F5F8FD; margin-left: 0; padding: 10px 16px; }
-.md-page { font: 15.5px/1.62 -apple-system, BlinkMacSystemFont, "Segoe UI",
-  Helvetica, Arial, sans-serif; color: var(--ink); }
-.md-page h1 { font-size: 31px; line-height: 1.2; }
-.md-page h2 { font-size: 21px; margin-top: 34px;
-  border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
-.md-page table { border-collapse: collapse; font-size: 14px; margin: 16px 0; }
-.md-page th, .md-page td { border: 1px solid var(--rule); padding: 6px 11px;
-  text-align: left; vertical-align: top; }
-.md-page th { background: #F4F7FA; }
-.md-page code { background: #F2F4F7; padding: 1px 5px; border-radius: 3px;
-  font-size: 13.5px; }
-.md-page pre { background: #F7F9FB; border: 1px solid var(--rule);
-  padding: 13px 15px; border-radius: 6px; overflow-x: auto; }
-.md-page pre code { background: none; padding: 0; }
-.md-page blockquote { border-left: 3px solid var(--accent); background: #F5F8FD;
-  margin-left: 0; padding: 10px 16px; }
-.md-page img { max-width: 100%; }
-@media (max-width: 950px) {
-  #site-nav { position: static; width: auto; height: auto; border-right: none;
-              border-bottom: 1px solid var(--rule); }
-  #site-main { margin-left: 0; }
-  #site-main .jp-Notebook, #site-main .md-page, #pager { padding: 22px 18px; }
-}
-</style>
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
-<nav id="site-nav">
-  <a class="brand" href="index.html">Why random splits lie about churn</a>
-  <div class="sub">A worked temporal-validation protocol, with every number
-  computed by the notebook it appears in.</div>
-  <ol><li><a class="item" href="index.html">Overview</a></li></ol>
-  <div class="grouplabel">The argument, in order</div>
-  <ol><li><a class="item" href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li>
-<li><a class="item" href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li>
-<li><a class="item" href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li>
-<li><a class="item" href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li>
-<li><a class="item" href="04_the_gap.html"><span class="num">04</span>The gap</a></li>
-<li><a class="item" href="05_calibration.html"><span class="num">05</span>Calibration</a></li>
-<li><a class="item active" href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li>
-<li><a class="item" href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol>
-  <div class="grouplabel">Takeaway</div>
-  <ol><li><a class="item" href="checklist.html">The portable checklist</a></li></ol>
-  <div class="repo"><a href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a></div>
+<nav id="site-nav" aria-label="Site">
+  <input type="checkbox" id="nav-toggle" class="vh">
+  <div class="navhead">
+    <a class="brand" href="index.html">Why random splits lie about churn</a>
+    <label for="nav-toggle" class="btn menu-btn">Menu</label>
+  </div>
+  <div class="navbody">
+    <div class="sub">A temporal-validation case study. Every number is computed by
+    the notebook it appears in.</div>
+    <ol><li><a class="item" href="index.html">Summary and headline results</a></li></ol>
+    <div class="chapter"><span class="k">Chapter 1</span><span class="t">The illusion</span></div><ol><li><a class="item" href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li><li><a class="item" href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li><li><a class="item" href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li></ol><div class="chapter"><span class="k">Chapter 2</span><span class="t">The protocol</span></div><ol><li><a class="item" href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li><li><a class="item" href="04_the_gap.html"><span class="num">04</span>The gap</a></li></ol><div class="chapter"><span class="k">Chapter 3</span><span class="t">Decision economics</span></div><ol><li><a class="item" href="05_calibration.html"><span class="num">05</span>Calibration</a></li><li><a class="item active" href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li></ol><div class="chapter"><span class="k">Chapter 4</span><span class="t">Generalisation</span></div><ol><li><a class="item" href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol>
+    <div class="grouplabel">Reusable artifacts</div>
+    <ol><li><a class="item" href="checklist.html">The validation checklist</a></li><li><a class="item" href="decisions.html">Decision records (ADRs)</a></li>
+      <li><a class="item" href="index.html#reproducing">Reproduce it</a></li>
+      <li><a class="item" href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a></li>
+    </ol>
+    <div class="author-card">
+      <span class="name">JT Moeller</span>
+      <span class="role">Data scientist</span>
+      <p>Model validation, leakage auditing and decision-focused evaluation. Built to be reproduced, not skimmed.</p>
+      <div class="links"><a href="https://github.com/jtdata">GitHub</a></div>
+    </div>
+  </div>
 </nav>
 <div id="site-main">
-
+<div class="page-top"><span class="crumb">Chapter 3 &middot; <b>Decision economics</b> &middot; part 2 of 2</span><button class="btn" id="code-toggle" type="button" aria-pressed="false">Show all code</button></div>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=051fd117">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bf28ecd0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="06-Hazard-framing">06 Hazard framing<a class="anchor-link" href="#06-Hazard-framing">¶</a></h1><p><strong>Question this notebook answers:</strong> does <em>when</em> a customer churns behave
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_title" data-mime-type="text/markdown">
+<h1 id="06-Hazard-framing">06 Hazard framing<a class="anchor-link" href="#06-Hazard-framing">¶</a></h1>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=94eb8ec0">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_brief" data-mime-type="text/markdown">
+<p><strong>Question this notebook answers:</strong> does <em>when</em> a customer churns behave
 differently from <em>whether</em>? Does a discrete-time hazard model catch
 anything the binary classifier misses?</p>
 <p><strong>Consumes:</strong> <code>03</code>'s pipeline directly (<code>churnval.features.asof_features</code>,
@@ -128,7 +84,16 @@ uses the earliest tested origin instead, disclosed rather than quietly
 swapped in.</p>
 <p><strong>Runtime:</strong> several minutes. One more rolling-origin backtest, over a
 person-period panel roughly 2.5x the row count of <code>03</code>'s.</p>
-<hr/>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=38440cbe">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>Every notebook so far has asked <em>whether</em> a customer churns within a fixed
 90-day window: one yes/no label, one probability.
 <code>docs/standards/validation.md</code> asks for more where "when" matters as well
@@ -153,6 +118,8 @@ makes that blind spot visible instead of absorbed into one number.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b2e17b12">
+<details class="code-fold">
+<summary><span class="fold-kind">Imports and setup</span><span class="fold-n">36 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -206,6 +173,7 @@ makes that blind spot visible instead of absorbed into one number.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -232,6 +200,8 @@ measured against, not a new number.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=de6e30b2">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">4 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -248,6 +218,7 @@ measured against, not a new number.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -361,6 +332,8 @@ partway through their own label window, so nothing should change.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a52007e0">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">8 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -381,6 +354,7 @@ partway through their own label window, so nothing should change.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -414,6 +388,8 @@ with.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=26427fe4">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">1 line</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -427,6 +403,7 @@ with.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -498,6 +475,8 @@ should be testable under both. Checked below rather than assumed.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fb8c5f37">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">12 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -522,6 +501,7 @@ should be testable under both. Checked below rather than assumed.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -631,6 +611,8 @@ same variation or diverges from it.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=38fa5bac">
+<details class="code-fold">
+<summary><span class="fold-kind">Chart code</span><span class="fold-n">31 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -675,6 +657,7 @@ same variation or diverges from it.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -701,6 +684,8 @@ metrics.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=18a869a6">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">8 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -721,6 +706,7 @@ metrics.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -798,6 +784,8 @@ this curve sits at a familiar reference point.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fc88c3ad">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">31 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -844,6 +832,7 @@ this curve sits at a familiar reference point.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -923,6 +912,8 @@ origin checks that directly.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=76ba7b5d">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">12 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -947,6 +938,7 @@ origin checks that directly.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -981,6 +973,8 @@ exactly this kind of claim, settles it instead of inferring it.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=52b7845f">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">15 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1009,6 +1003,7 @@ exactly this kind of claim, settles it instead of inferring it.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1093,6 +1088,8 @@ that notebook's finding rather than a new set of numbers.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=04f68837">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">22 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1128,6 +1125,7 @@ that notebook's finding rather than a new set of numbers.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1215,6 +1213,8 @@ page, a transform of the survival curve rather than a new model output.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a160c958">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">8 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1235,6 +1235,7 @@ page, a transform of the survival curve rather than a new model output.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1324,6 +1325,8 @@ is visible rather than asserted.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a02d553e">
+<details class="code-fold">
+<summary><span class="fold-kind">Chart code</span><span class="fold-n">43 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1384,6 +1387,7 @@ is visible rather than asserted.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1440,6 +1444,8 @@ history exists after its window to make the question answerable.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3febfb8c">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">10 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1462,6 +1468,7 @@ history exists after its window to make the question answerable.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1477,6 +1484,8 @@ earliest tested origin 2011-03-31: 156 days past its window -- used instead
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=44144a3d">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">16 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1506,6 +1515,7 @@ earliest tested origin 2011-03-31: 156 days past its window -- used instead
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1533,6 +1543,8 @@ how many come back after a further full horizon.</p>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bad77121">
+<details class="code-fold">
+<summary><span class="fold-kind">Code</span><span class="fold-n">7 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1552,6 +1564,7 @@ how many come back after a further full horizon.</p>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1568,6 +1581,8 @@ dtype: float64</pre>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9b04b812">
+<details class="code-fold">
+<summary><span class="fold-kind">Chart code</span><span class="fold-n">18 lines</span></summary>
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1598,6 +1613,7 @@ dtype: float64</pre>
 </div>
 </div>
 </div>
+</details>
 <div class="jp-Cell-outputWrapper">
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
@@ -1666,7 +1682,7 @@ cutoff" is a question a single binary label cannot ask of itself.</p>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_audit" data-mime-type="text/markdown">
 <hr/>
 <h2 id="Leakage-audit">Leakage audit<a class="anchor-link" href="#Leakage-audit">¶</a></h2><p><code>06</code> builds one genuinely new label structure, the person-period
 expansion, on top of <code>03</code>'s audited features and eligibility. The audit
@@ -1759,7 +1775,7 @@ retrospective diagnostic's use of history no model above sees.</p>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_closing" data-mime-type="text/markdown">
 <hr/>
 <h2 id="Closing">Closing<a class="anchor-link" href="#Closing">¶</a></h2><p><strong>Finding:</strong> a discrete-time hazard model, built on the same as-of-safe
 features and the same rolling-origin protocol <code>03</code> validated, matches the
@@ -1795,5 +1811,25 @@ row count. It closes with the portable checklist.</p>
 
 <div id="pager"><a href="05_calibration.html"><span class="lbl">Previous</span>Calibration</a><a href="07_generalisation.html" style="text-align:right"><span class="lbl">Next</span>Generalisation</a></div>
 </div>
+<script>
+(function () {
+  var btn = document.getElementById('code-toggle');
+  if (!btn) return;
+  var folds = document.querySelectorAll('details.code-fold');
+  if (!folds.length) { btn.style.display = 'none'; return; }
+  function set(open) {
+    folds.forEach(function (d) { d.open = open; });
+    btn.textContent = open ? 'Hide all code' : 'Show all code';
+    btn.setAttribute('aria-pressed', open ? 'true' : 'false');
+    try { localStorage.setItem('showCode', open ? '1' : '0'); } catch (e) {}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('showCode'); } catch (e) {}
+  if (saved === '1') set(true);
+  btn.addEventListener('click', function () {
+    set(btn.getAttribute('aria-pressed') !== 'true');
+  });
+})();
+</script>
 </body>
 </html>

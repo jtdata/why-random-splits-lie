@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decision records (ADRs) | Why random splits lie about churn</title>
+<meta name="description" content="A controlled demonstration that a random split overstates churn-model ROC AUC by 0.138, and a worked temporal-validation protocol that measures the honest number.">
+<meta name="author" content="JT Moeller">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Decision records (ADRs) | Why random splits lie about churn">
+<meta property="og:description" content="A controlled demonstration that a random split overstates churn-model ROC AUC by 0.138, and a worked temporal-validation protocol that measures the honest number.">
+<meta property="og:url" content="https://jtdata.github.io/why-random-splits-lie/decisions.html">
+<meta property="og:image" content="https://jtdata.github.io/why-random-splits-lie/assets/the_gap.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141D26'/%3E%3Crect x='6' y='8' width='8' height='18' fill='%23D6349C'/%3E%3Crect x='18' y='14' width='8' height='12' fill='%23D98E04'/%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<nav id="site-nav" aria-label="Site">
+  <input type="checkbox" id="nav-toggle" class="vh">
+  <div class="navhead">
+    <a class="brand" href="index.html">Why random splits lie about churn</a>
+    <label for="nav-toggle" class="btn menu-btn">Menu</label>
+  </div>
+  <div class="navbody">
+    <div class="sub">A temporal-validation case study. Every number is computed by
+    the notebook it appears in.</div>
+    <ol><li><a class="item" href="index.html">Summary and headline results</a></li></ol>
+    <div class="chapter"><span class="k">Chapter 1</span><span class="t">The illusion</span></div><ol><li><a class="item" href="00_problem_definition.html"><span class="num">00</span>Problem definition</a></li><li><a class="item" href="01_naive_baseline.html"><span class="num">01</span>Naive baseline</a></li><li><a class="item" href="02_leakage_diagnosis.html"><span class="num">02</span>Leakage diagnosis</a></li></ol><div class="chapter"><span class="k">Chapter 2</span><span class="t">The protocol</span></div><ol><li><a class="item" href="03_temporal_protocol.html"><span class="num">03</span>Temporal protocol</a></li><li><a class="item" href="04_the_gap.html"><span class="num">04</span>The gap</a></li></ol><div class="chapter"><span class="k">Chapter 3</span><span class="t">Decision economics</span></div><ol><li><a class="item" href="05_calibration.html"><span class="num">05</span>Calibration</a></li><li><a class="item" href="06_hazard_framing.html"><span class="num">06</span>Hazard framing</a></li></ol><div class="chapter"><span class="k">Chapter 4</span><span class="t">Generalisation</span></div><ol><li><a class="item" href="07_generalisation.html"><span class="num">07</span>Generalisation</a></li></ol>
+    <div class="grouplabel">Reusable artifacts</div>
+    <ol><li><a class="item" href="checklist.html">The validation checklist</a></li><li><a class="item active" href="decisions.html">Decision records (ADRs)</a></li>
+      <li><a class="item" href="index.html#reproducing">Reproduce it</a></li>
+      <li><a class="item" href="https://github.com/jtdata/why-random-splits-lie">Source on GitHub</a></li>
+    </ol>
+    <div class="author-card">
+      <span class="name">JT Moeller</span>
+      <span class="role">Data scientist</span>
+      <p>Model validation, leakage auditing and decision-focused evaluation. Built to be reproduced, not skimmed.</p>
+      <div class="links"><a href="https://github.com/jtdata">GitHub</a></div>
+    </div>
+  </div>
+</nav>
+<div id="site-main">
+<div class="md-page"><h1>Architecture Decision Records</h1>
+<p>Decisions that closed off a real alternative, recorded when they were made.</p>
+<p>Use the <code>adr</code> skill to add one. Never edit an accepted ADR's substance.
+Supersede it with a new record and link both ways.</p>
+<table>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Decision</th>
+  <th>Status</th>
+  <th>Date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0001-record-architecture-decisions.md">0001</a></td>
+  <td>Record architecture decisions</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0002-repo-per-project.md">0002</a></td>
+  <td>One git repo per portfolio project, standards vendored into each</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0003-dataset-selection.md">0003</a></td>
+  <td>Use KKBox and Online Retail II; reject the Telco churn dataset</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0004-duckdb-over-spark.md">0004</a></td>
+  <td>DuckDB over Parquet instead of Spark for local scale</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0005-notebooks-narrate-src-implements.md">0005</a></td>
+  <td>Notebooks narrate, <code>src/</code> implements, jupytext pairs them</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0006-mlflow-local-file-store.md">0006</a></td>
+  <td>MLflow local file store during development</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0007-online-retail-ii-naive-panel-definition.md">0007</a></td>
+  <td>Online Retail II naive panel: 90-day horizon, 365-day &gt;=1-purchase eligibility</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0008-lightgbm-shared-model-family.md">0008</a></td>
+  <td>LightGBM is the single model family reused across 01, 03, and 04</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0009-rolling-origin-backtest-window-and-purge.md">0009</a></td>
+  <td>Rolling-origin backtest: expanding training window with a label-maturity purge</td>
+  <td>Accepted</td>
+  <td>2026-08-25</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0010-holdout-comparison-common-origin.md">0010</a></td>
+  <td>Naive-vs-correct holdout comparison: one common origin/population, isolating training/serving skew</td>
+  <td>Accepted</td>
+  <td>2026-08-26</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0011-calibration-split-and-honest-ev-threshold.md">0011</a></td>
+  <td>Calibration: three-way temporal split, and EV threshold derived from costs, never chosen by peeking at evaluation outcomes</td>
+  <td>Accepted</td>
+  <td>2026-08-26</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0012-hazard-period-width.md">0012</a></td>
+  <td>Discrete-time hazard model uses 30-day periods (3 per 90-day horizon)</td>
+  <td>Accepted</td>
+  <td>2026-08-26</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0013-kkbox-eligibility-and-label-definition.md">0013</a></td>
+  <td>KKBox eligibility is expiry-based; no HORIZON_DAYS/GAP_DAYS override; label doesn't reproduce KKBox's own churn definition</td>
+  <td>Accepted</td>
+  <td>2026-08-28</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0014-kkbox-module-reuse-strategy.md">0014</a></td>
+  <td>KKBox reuses backtest/evaluation/calibration/hazard engines unchanged, rebuilds panel construction fresh, generalizes one hazard function in place</td>
+  <td>Accepted</td>
+  <td>2026-08-28</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0015-duckdb-for-kkbox-scale.md">0015</a></td>
+  <td>KKBox's read/clean/panel-construction layer uses DuckDB, not pandas</td>
+  <td>Accepted</td>
+  <td>2026-08-28</td>
+</tr>
+<tr>
+  <td><a href="https://github.com/jtdata/why-random-splits-lie/blob/main/docs/adr/0016-site-rendered-in-ci-from-executed-branch.md">0016</a></td>
+  <td>The site is rendered in CI from an <code>executed</code> branch; notebooks are still never executed in CI</td>
+  <td>Accepted</td>
+  <td>2026-11-13</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="pager"><a href="checklist.html"><span class="lbl">Previous</span>The validation checklist</a><span></span></div>
+</div>
+<script>
+(function () {
+  var btn = document.getElementById('code-toggle');
+  if (!btn) return;
+  var folds = document.querySelectorAll('details.code-fold');
+  if (!folds.length) { btn.style.display = 'none'; return; }
+  function set(open) {
+    folds.forEach(function (d) { d.open = open; });
+    btn.textContent = open ? 'Hide all code' : 'Show all code';
+    btn.setAttribute('aria-pressed', open ? 'true' : 'false');
+    try { localStorage.setItem('showCode', open ? '1' : '0'); } catch (e) {}
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('showCode'); } catch (e) {}
+  if (saved === '1') set(true);
+  btn.addEventListener('click', function () {
+    set(btn.getAttribute('aria-pressed') !== 'true');
+  });
+})();
+</script>
+</body>
+</html>
