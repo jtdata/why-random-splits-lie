@@ -5,6 +5,8 @@
 # The executed notebooks, outputs included, live on the `executed` branch,
 # pushed from a machine that has the data (`.\make.ps1 results`). This job
 # combines them with the builder on `main` and pushes the result to gh-pages.
+# `make.ps1 results` copies this file onto the `executed` branch, because a
+# push only triggers a workflow that exists on the pushed branch.
 # See docs/adr/0016-site-rendered-in-ci-from-executed-branch.md.
 name: site
 

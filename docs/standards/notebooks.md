@@ -34,8 +34,8 @@ Notebooks orchestrate and narrate. They do not implement. A cell moves into
 - Executed copies with outputs are produced by `papermill` into
   `reports/executed/` (gitignored) and rendered to HTML for publication.
 - Outputs never enter `main`. Where a published site needs them, the executed
-  copies go to a separate `executed` branch that holds nothing else, with the
-  run metadata removed, and CI renders from that branch.
+  copies go to a separate `executed` branch that holds no source, with the run
+  metadata removed, and CI renders from that branch.
 
 ## Charts
 

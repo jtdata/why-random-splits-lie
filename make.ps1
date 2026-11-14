@@ -76,6 +76,11 @@ switch ($Task) {
     }
     $sha = (git rev-parse --short HEAD)
     Set-Content -Path (Join-Path $work 'SOURCE_COMMIT') -Value $sha -Encoding ascii
+    # GitHub only runs a workflow for a push when the workflow file exists on
+    # the branch that was pushed, so the branch carries a copy of it. Without
+    # this, pushing fresh outputs would not rebuild the site.
+    New-Item -ItemType Directory -Force -Path (Join-Path $work '.github\workflows') | Out-Null
+    Copy-Item .github\workflows\site.yml (Join-Path $work '.github\workflows\site.yml') -Force
     # nbstripout is installed as a git filter and would strip the very outputs
     # this branch exists to carry, so it is switched off for this one add.
     git -C $work -c filter.nbstripout.clean=cat -c filter.nbstripout.required=false add -A

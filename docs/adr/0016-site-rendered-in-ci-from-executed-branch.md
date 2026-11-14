@@ -26,8 +26,11 @@ source, since each would build with whatever environment it had.
 ## Decision
 
 1. The executed notebooks are published to an orphan branch, `executed`,
-   that holds only those files and a `SOURCE_COMMIT` marker. `main` still
-   never contains an output. `.\make.ps1 results` pushes the branch.
+   that holds only those files, a `SOURCE_COMMIT` marker and a copy of the
+   workflow file. `main` still never contains an output. `.\make.ps1 results`
+   pushes the branch. The workflow copy is there because GitHub only runs a
+   workflow for a push when the file exists on the pushed branch; the job
+   itself always builds from `main`.
 2. Before they are pushed, `scripts/export_executed.py` removes the run
    metadata papermill writes (it records absolute input and output paths)
    and stops if a home-directory path remains anywhere in a notebook.
