@@ -3,16 +3,22 @@
 A controlled demonstration that the standard offline evaluation of churn models
 overstates their real performance, and a worked protocol for doing it properly.
 
+By [JT Moeller](https://github.com/jtdata). **[Read it as a case study](https://jtdata.github.io/why-random-splits-lie/)**,
+or take just [the eleven-point checklist](https://jtdata.github.io/why-random-splits-lie/checklist.html).
+
+[![ROC AUC, PR AUC and Brier score under a random split, a temporal split with no gap, and a temporal split with a gap and a rolling origin](reports/figures/the_gap.png)](https://jtdata.github.io/why-random-splits-lie/)
+
 > **Status:** the notebook sequence is complete: the headline gap (`04`)
 > on Online Retail II, calibration (`05`), the hazard framing (`06`), and
 > the KKBox replication plus the portable checklist (`07`). Every number
 > below is copied from a `reports/results_*.json` file that a notebook in
 > this repo wrote; none is estimated or recalled.
 
-**[Read the notebooks as a report, with every chart and table shown](https://jtdata.github.io/why-random-splits-lie/)**, or read the source in
-`notebooks/`. The published pages are the executed notebooks: same code, same
-prose, plus the outputs GitHub cannot show because this repo strips them from
-version control.
+The [published site](https://jtdata.github.io/why-random-splits-lie/) groups
+the eight notebooks into four chapters, with the code folded away so the
+argument and the charts lead. The pages are the executed notebooks: same code,
+same prose, plus the outputs GitHub cannot show because this repo strips them
+from version control. The source is in `notebooks/`.
 
 ## The claim
 

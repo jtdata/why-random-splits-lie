@@ -1,0 +1,16 @@
+{#-
+  Report template: nbconvert's lab template with one change. Every code cell's
+  input is wrapped in a closed <details>, so prose, charts and tables lead and
+  the code is one click away. Outputs are untouched.
+
+  `fold_label` is a filter registered by scripts/build_site.py. It names what
+  the folded cell does (setup, chart or code) and how long it is.
+-#}
+{%- extends 'lab/index.html.j2' -%}
+
+{% block input_group -%}
+<details class="code-fold">
+<summary>{{ cell.source | fold_label }}</summary>
+{{ super() }}
+</details>
+{% endblock input_group %}
