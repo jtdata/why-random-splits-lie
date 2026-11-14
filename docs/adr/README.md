@@ -22,3 +22,4 @@ Supersede it with a new record and link both ways.
 | [0013](0013-kkbox-eligibility-and-label-definition.md) | KKBox eligibility is expiry-based; no HORIZON_DAYS/GAP_DAYS override; label doesn't reproduce KKBox's own churn definition | Accepted | 2026-08-28 |
 | [0014](0014-kkbox-module-reuse-strategy.md) | KKBox reuses backtest/evaluation/calibration/hazard engines unchanged, rebuilds panel construction fresh, generalizes one hazard function in place | Accepted | 2026-08-28 |
 | [0015](0015-duckdb-for-kkbox-scale.md) | KKBox's read/clean/panel-construction layer uses DuckDB, not pandas | Accepted | 2026-08-28 |
+| [0016](0016-site-rendered-in-ci-from-executed-branch.md) | The site is rendered in CI from an `executed` branch; notebooks are still never executed in CI | Accepted | 2026-11-13 |

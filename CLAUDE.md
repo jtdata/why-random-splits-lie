@@ -36,6 +36,7 @@ docs/adr/          decision records
 docs/standards/    the rules this repo follows (published with the repo)
 data/              gitignored; fetched by `churnval fetch`
 reports/figures/   exported charts referenced by the essay
+scripts/           build_site.py renders reports/executed into the case-study site
 ```
 
 ## Commands
@@ -48,15 +49,31 @@ uv run ruff check --fix .    # lint
 uv run ruff format .         # format
 uv run jupytext --sync notebooks/*.ipynb
 .\make.ps1 nb                # execute all notebooks in order into reports/
-.\make.ps1 site              # render the executed notebooks to reports/_site
-.\make.ps1 publish           # push reports/_site to the gh-pages branch
+.\make.ps1 site              # render the executed notebooks to reports/_site (local preview)
+.\make.ps1 results           # push reports/executed to the `executed` branch
+.\make.ps1 publish           # manual fallback: push reports/_site to gh-pages
 ```
 
-The published site is https://jtdata.github.io/why-random-splits-lie/. It is
-built locally, never in CI: the notebooks cannot run without `data/`, which is
-gitignored by design, and `07` needs Kaggle credentials plus about half an
-hour. So `nb`, then `site`, then `publish`, in that order, and only when the
-outputs are worth republishing.
+The published site is https://jtdata.github.io/why-random-splits-lie/. GitHub
+Actions renders and publishes it (`.github/workflows/site.yml`) on every push
+to `main` or `executed`. CI renders, it never executes: the notebooks cannot
+run without `data/`, which is gitignored by design, and `07` needs Kaggle
+credentials plus about half an hour. See ADR-0016.
+
+- A change to prose, the README, the checklist, an ADR or the site builder:
+  push `main` from any machine. The site rebuilds from the outputs already on
+  `executed`.
+- A change to results: on a machine that has `data/`, run `nb`, commit the
+  refreshed `reports/results_*.json` and `reports/figures/` to `main`, then
+  run `results`. Push `main` first so the numbers and the outputs it is
+  rendered with come from the same run.
+
+The site is a case study, not a notebook dump, and `scripts/build_site.py` owns
+that presentation: the landing page's numbers are read from
+`reports/results_*.json`, the notebooks are grouped into chapters by the
+`CHAPTERS` list, and code cells are folded by `scripts/site_template/report`.
+A new notebook must be added to a chapter there. The author card comes from
+`AUTHOR` in the same file; a link with an empty URL is not shown.
 
 ## Working notes for Claude
 

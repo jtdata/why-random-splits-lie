@@ -1,0 +1,93 @@
+# Render the case-study site and publish it to GitHub Pages.
+#
+# This workflow renders. It never executes a notebook: the notebooks need
+# data/ (gitignored) and 07 needs Kaggle credentials and about half an hour.
+# The executed notebooks, outputs included, live on the `executed` branch,
+# pushed from a machine that has the data (`.\make.ps1 results`). This job
+# combines them with the builder on `main` and pushes the result to gh-pages.
+# See docs/adr/0016-site-rendered-in-ci-from-executed-branch.md.
+name: site
+
+on:
+  push:
+    branches: [main, executed]
+    paths-ignore:
+      - "tests/**"
+      - "data/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Two pushes close together (main, then executed) must not publish out of
+# order. The later run waits for the earlier one.
+concurrency:
+  group: site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Always build from main, also when the push that triggered this run was
+      # to `executed`: the builder, the README and the result files live here.
+      - name: Check out the source
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Look for the executed notebooks
+        id: executed
+        run: |
+          if git ls-remote --exit-code --heads origin executed > /dev/null; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No 'executed' branch yet, so there is nothing to render. Run .\make.ps1 nb and .\make.ps1 results on a machine that has the data."
+          fi
+
+      - name: Check out the executed notebooks
+        if: steps.executed.outputs.present == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: executed
+          path: reports/executed
+
+      - name: Install uv
+        if: steps.executed.outputs.present == 'true'
+        uses: astral-sh/setup-uv@v5
+
+      # Only the dev group (nbconvert and friends) at the versions in uv.lock.
+      # The modelling stack is not installed because nothing is executed.
+      - name: Build the site
+        if: steps.executed.outputs.present == 'true'
+        run: uv run --frozen --only-group dev python scripts/build_site.py
+
+      # gh-pages holds only rendered output. Its history is kept, so each
+      # published version of the site stays recoverable.
+      - name: Check out the published site
+        if: steps.executed.outputs.present == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: _pages
+
+      - name: Publish to gh-pages
+        if: steps.executed.outputs.present == 'true'
+        run: |
+          source_sha=$(git rev-parse --short HEAD)
+          outputs_sha=$(git -C reports/executed rev-parse --short HEAD)
+          find _pages -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -r reports/_site/. _pages/
+          cd _pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Site unchanged, nothing to publish." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -q -m "Render site from $source_sha (outputs $outputs_sha)"
+          git push -q origin gh-pages
+          echo "Published $source_sha with outputs $outputs_sha" >> "$GITHUB_STEP_SUMMARY"
